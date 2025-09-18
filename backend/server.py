@@ -1,9 +1,9 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Cookie, Header
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, validator
 from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
@@ -26,7 +26,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # FastAPI setup
-app = FastAPI(title="Calendrier Disponibilités Artistes")
+app = FastAPI(title="Calendrier Disponibilités Artistes - Journées Entières")
 api_router = APIRouter(prefix="/api")
 
 # Security
@@ -34,6 +34,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Configuration
+DEFAULT_TZ = "Europe/Paris"
+MIN_MONTHS_AHEAD = 12
+MAX_MONTHS_AHEAD = 18
+NOTES_MAX_LEN = 280
 
 # CORS
 app.add_middleware(
@@ -54,10 +60,6 @@ class InvitationStatus(str, Enum):
     ACCEPTED = "acceptée"
     EXPIRED = "expirée"
 
-class AvailabilityType(str, Enum):
-    SLOT = "créneau"
-    ALL_DAY = "journée_entière"
-
 # Models
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -65,13 +67,13 @@ class User(BaseModel):
     email: EmailStr
     password_hash: str
     email_verified_at: Optional[datetime] = None
-    timezone: str = "Europe/Paris"
+    timezone: str = DEFAULT_TZ
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    timezone: str = "Europe/Paris"
+    timezone: str = DEFAULT_TZ
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -101,23 +103,46 @@ class Invitation(BaseModel):
 class InvitationCreate(BaseModel):
     email: EmailStr
 
-class Availability(BaseModel):
+class AvailabilityDay(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     artist_id: str
-    start_datetime: datetime
-    end_datetime: datetime
-    type: AvailabilityType
-    note: Optional[str] = None
-    recurrence_rule: Optional[str] = None
+    date: date  # YYYY-MM-DD format, no time
+    note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
     color: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    @validator('date')
+    def validate_date_not_past(cls, v):
+        today = date.today()
+        if v < today:
+            raise ValueError('Impossible de créer une disponibilité sur une date passée')
+        
+        max_date = today + timedelta(days=MAX_MONTHS_AHEAD * 30)
+        if v > max_date:
+            raise ValueError(f'Disponibilité trop lointaine (maximum {MAX_MONTHS_AHEAD} mois)')
+        
+        return v
 
-class AvailabilityCreate(BaseModel):
-    start_datetime: datetime
-    end_datetime: datetime
-    type: AvailabilityType
-    note: Optional[str] = None
-    recurrence_rule: Optional[str] = None
+class AvailabilityDayCreate(BaseModel):
+    date: date
+    note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
+    color: Optional[str] = None
+    
+    @validator('date')
+    def validate_date_not_past(cls, v):
+        today = date.today()
+        if v < today:
+            raise ValueError('Impossible de créer une disponibilité sur une date passée')
+        
+        max_date = today + timedelta(days=MAX_MONTHS_AHEAD * 30)
+        if v > max_date:
+            raise ValueError(f'Disponibilité trop lointaine (maximum {MAX_MONTHS_AHEAD} mois)')
+        
+        return v
+
+class AvailabilityDayToggle(BaseModel):
+    date: date
+    note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
     color: Optional[str] = None
 
 class Token(BaseModel):
@@ -227,6 +252,7 @@ def send_invitation_email(email: str, token: str):
                         Créer mon compte
                     </a>
                     <p>Ce lien expire dans 7 jours.</p>
+                    <p><strong>Note :</strong> Vous pourrez indiquer vos disponibilités par journées entières jusqu'à {MIN_MONTHS_AHEAD} mois dans le futur.</p>
                 </body>
             </html>
             """
@@ -347,116 +373,147 @@ async def get_my_profile(current_user: User = Depends(get_current_user)):
 # Artists management (Admin only)
 @api_router.get("/artists", response_model=List[ArtistWithProfile])
 async def get_all_artists(current_user: User = Depends(get_current_admin)):
-    pipeline = [
-        {"$match": {"role": UserRole.ARTIST}},
-        {"$lookup": {
-            "from": "artist_profiles",
-            "localField": "id",
-            "foreignField": "user_id",
-            "as": "profile"
-        }},
-        {"$unwind": {"path": "$profile", "preserveNullAndEmptyArrays": True}}
-    ]
+    artists_cursor = db.users.find({"role": UserRole.ARTIST})
+    artists = await artists_cursor.to_list(1000)
     
-    artists = await db.users.aggregate(pipeline).to_list(1000)
     result = []
-    
     for artist in artists:
-        profile = artist.get('profile', {})
+        profile = await db.artist_profiles.find_one({"user_id": artist['id']})
         result.append(ArtistWithProfile(
             id=artist['id'],
             email=artist['email'],
-            nom_de_scene=profile.get('nom_de_scene', ''),
-            telephone=profile.get('telephone'),
-            lien=profile.get('lien')
+            nom_de_scene=profile.get('nom_de_scene', '') if profile else '',
+            telephone=profile.get('telephone') if profile else None,
+            lien=profile.get('lien') if profile else None
         ))
     
     return result
 
-# Availability endpoints
-@api_router.post("/availabilities", response_model=Availability)
-async def create_availability(availability_data: AvailabilityCreate, current_user: User = Depends(get_current_user)):
+# Availability Day endpoints
+@api_router.post("/availability-days/toggle", response_model=Dict[str, Any])
+async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.ARTIST:
-        raise HTTPException(status_code=403, detail="Seuls les artistes peuvent créer des disponibilités")
+        raise HTTPException(status_code=403, detail="Seuls les artistes peuvent gérer leurs disponibilités")
     
-    # Validate dates
-    if availability_data.start_datetime >= availability_data.end_datetime:
-        raise HTTPException(status_code=400, detail="La date de fin doit être après la date de début")
+    # Validate date (not in the past, within allowed window)
+    today = date.today()
+    if day_data.date < today:
+        raise HTTPException(status_code=400, detail="Impossible de créer une disponibilité sur une date passée")
     
-    availability = Availability(artist_id=current_user.id, **availability_data.dict())
-    await db.availabilities.insert_one(availability.dict())
-    return availability
-
-@api_router.get("/availabilities", response_model=List[Dict[str, Any]])
-async def get_availabilities(current_user: User = Depends(get_current_user)):
-    if current_user.role == UserRole.ARTIST:
-        # Artists can only see their own availabilities
-        availabilities = await db.availabilities.find({"artist_id": current_user.id}).to_list(1000)
-        return [Availability(**avail).dict() for avail in availabilities]
+    max_date = today + timedelta(days=MAX_MONTHS_AHEAD * 30)
+    if day_data.date > max_date:
+        raise HTTPException(status_code=400, detail=f"Disponibilité trop lointaine (maximum {MAX_MONTHS_AHEAD} mois)")
+    
+    # Check if availability already exists
+    existing = await db.availability_days.find_one({
+        "artist_id": current_user.id,
+        "date": day_data.date.isoformat()
+    })
+    
+    if existing:
+        # Remove availability (toggle OFF)
+        await db.availability_days.delete_one({"id": existing['id']})
+        return {"action": "removed", "date": day_data.date.isoformat(), "available": False}
     else:
-        # Admin can see all availabilities with artist info
-        availabilities = await db.availabilities.find().to_list(1000)
+        # Add availability (toggle ON)
+        availability = AvailabilityDay(
+            artist_id=current_user.id,
+            date=day_data.date,
+            note=day_data.note,
+            color=day_data.color or "#3b82f6"
+        )
+        await db.availability_days.insert_one(availability.dict())
+        return {"action": "added", "date": day_data.date.isoformat(), "available": True, "availability": availability.dict()}
+
+@api_router.get("/availability-days", response_model=List[Dict[str, Any]])
+async def get_availability_days(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role == UserRole.ARTIST:
+        # Artists can only see their own availability days
+        query = {"artist_id": current_user.id}
+        
+        if start_date:
+            query["date"] = {"$gte": start_date}
+        if end_date:
+            if "date" in query:
+                query["date"]["$lte"] = end_date
+            else:
+                query["date"] = {"$lte": end_date}
+        
+        availability_days = await db.availability_days.find(query).to_list(1000)
+        return [AvailabilityDay(**day).dict() for day in availability_days]
+    
+    else:
+        # Admin can see all availability days with artist info
+        query = {}
+        
+        if start_date:
+            query["date"] = {"$gte": start_date}
+        if end_date:
+            if "date" in query:
+                query["date"]["$lte"] = end_date
+            else:
+                query["date"] = {"$lte": end_date}
+        
+        availability_days = await db.availability_days.find(query).to_list(1000)
         
         result = []
-        for avail in availabilities:
+        for day in availability_days:
             # Get artist profile
-            profile = await db.artist_profiles.find_one({"user_id": avail['artist_id']})
-            user = await db.users.find_one({"id": avail['artist_id']})
+            profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
+            user = await db.users.find_one({"id": day['artist_id']})
             
-            # Create clean availability data
-            clean_avail = Availability(**avail).dict()
-            clean_avail['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
-            clean_avail['artist_email'] = user.get('email') if user else ''
+            # Create clean availability day data
+            clean_day = AvailabilityDay(**day).dict()
+            clean_day['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
+            clean_day['artist_email'] = user.get('email') if user else ''
             
-            result.append(clean_avail)
+            result.append(clean_day)
         
         return result
 
-@api_router.get("/availabilities/{availability_id}", response_model=Availability)
-async def get_availability(availability_id: str, current_user: User = Depends(get_current_user)):
-    availability = await db.availabilities.find_one({"id": availability_id})
-    if not availability:
-        raise HTTPException(status_code=404, detail="Disponibilité non trouvée")
+@api_router.get("/availability-days/{day_date}", response_model=List[ArtistWithProfile])
+async def get_artists_available_on_date(day_date: str, current_user: User = Depends(get_current_admin)):
+    """Get list of artists available on a specific date (admin only)"""
+    try:
+        target_date = datetime.strptime(day_date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Format de date invalide. Utilisez YYYY-MM-DD")
     
-    # Check permissions
-    if current_user.role == UserRole.ARTIST and availability['artist_id'] != current_user.id:
-        raise HTTPException(status_code=403, detail="Vous ne pouvez voir que vos propres disponibilités")
+    # Find all availability days for this date
+    availability_days = await db.availability_days.find({"date": day_date}).to_list(1000)
     
-    return Availability(**availability)
+    available_artists = []
+    for day in availability_days:
+        # Get artist profile
+        profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
+        user = await db.users.find_one({"id": day['artist_id']})
+        
+        if user:
+            available_artists.append(ArtistWithProfile(
+                id=user['id'],
+                email=user['email'],
+                nom_de_scene=profile.get('nom_de_scene', '') if profile else '',
+                telephone=profile.get('telephone') if profile else None,
+                lien=profile.get('lien') if profile else None
+            ))
+    
+    return available_artists
 
-@api_router.put("/availabilities/{availability_id}", response_model=Availability)
-async def update_availability(availability_id: str, availability_data: AvailabilityCreate, current_user: User = Depends(get_current_user)):
-    availability = await db.availabilities.find_one({"id": availability_id})
-    if not availability:
+@api_router.delete("/availability-days/{day_id}")
+async def delete_availability_day(day_id: str, current_user: User = Depends(get_current_user)):
+    availability_day = await db.availability_days.find_one({"id": day_id})
+    if not availability_day:
         raise HTTPException(status_code=404, detail="Disponibilité non trouvée")
     
     # Check permissions
-    if current_user.role == UserRole.ARTIST and availability['artist_id'] != current_user.id:
-        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que vos propres disponibilités")
-    
-    # Validate dates
-    if availability_data.start_datetime >= availability_data.end_datetime:
-        raise HTTPException(status_code=400, detail="La date de fin doit être après la date de début")
-    
-    await db.availabilities.update_one(
-        {"id": availability_id},
-        {"$set": availability_data.dict()}
-    )
-    
-    updated_availability = await db.availabilities.find_one({"id": availability_id})
-    return Availability(**updated_availability)
-
-@api_router.delete("/availabilities/{availability_id}")
-async def delete_availability(availability_id: str, current_user: User = Depends(get_current_user)):
-    availability = await db.availabilities.find_one({"id": availability_id})
-    if not availability:
-        raise HTTPException(status_code=404, detail="Disponibilité non trouvée")
-    
-    # Check permissions
-    if current_user.role == UserRole.ARTIST and availability['artist_id'] != current_user.id:
+    if current_user.role == UserRole.ARTIST and availability_day['artist_id'] != current_user.id:
         raise HTTPException(status_code=403, detail="Vous ne pouvez supprimer que vos propres disponibilités")
     
-    await db.availabilities.delete_one({"id": availability_id})
+    await db.availability_days.delete_one({"id": day_id})
     return {"message": "Disponibilité supprimée"}
 
 # Verification endpoint for invitation tokens
@@ -467,6 +524,58 @@ async def verify_invitation_token(token: str):
         raise HTTPException(status_code=400, detail="Token d'invitation invalide ou expiré")
     
     return {"valid": True, "email": invitation['email']}
+
+# Export endpoints
+@api_router.get("/export/csv")
+async def export_csv(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    artist_ids: Optional[str] = None,
+    current_user: User = Depends(get_current_admin)
+):
+    """Export availability days to CSV format"""
+    import csv
+    from io import StringIO
+    
+    query = {}
+    
+    if start_date:
+        query["date"] = {"$gte": start_date}
+    if end_date:
+        if "date" in query:
+            query["date"]["$lte"] = end_date
+        else:
+            query["date"] = {"$lte": end_date}
+    
+    if artist_ids:
+        artist_id_list = artist_ids.split(",")
+        query["artist_id"] = {"$in": artist_id_list}
+    
+    availability_days = await db.availability_days.find(query).to_list(1000)
+    
+    # Create CSV content
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Date", "Nom Artiste", "Email", "Note"])
+    
+    for day in availability_days:
+        profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
+        user = await db.users.find_one({"id": day['artist_id']})
+        
+        artist_name = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
+        artist_email = user.get('email') if user else ''
+        
+        writer.writerow([
+            day['date'],
+            artist_name,
+            artist_email,
+            day.get('note', '')
+        ])
+    
+    csv_content = output.getvalue()
+    output.close()
+    
+    return {"csv_content": csv_content, "filename": f"disponibilites_{datetime.now().strftime('%Y%m%d')}.csv"}
 
 # Include router
 app.include_router(api_router)
