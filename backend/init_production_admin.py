@@ -41,8 +41,8 @@ async def init_production_admin():
     
     print("✅ Cleared all existing data")
     
-    # Create admin user with default values for demo
-    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@easybookevent.app')
+    # Create admin user with default values for production
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@easybookevent.com')
     admin_password = os.environ.get('ADMIN_PASSWORD', 'AdminSecure2024!')
     
     admin_user = {
