@@ -15,10 +15,10 @@ import {
   Download, 
   LogOut, 
   Shield,
-  Clock,
   Music,
   Phone,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Info
 } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -33,14 +33,14 @@ const localizer = momentLocalizer(moment);
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [artists, setArtists] = useState([]);
-  const [availabilities, setAvailabilities] = useState([]);
+  const [availabilityDays, setAvailabilityDays] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
-  const [filteredArtists, setFilteredArtists] = useState([]);
+  const [availableArtists, setAvailableArtists] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -50,7 +50,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     try {
       await Promise.all([
         loadArtists(),
-        loadAvailabilities(),
+        loadAvailabilityDays(),
         loadInvitations()
       ]);
     } catch (error) {
@@ -70,27 +70,31 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
-  const loadAvailabilities = async () => {
+  const loadAvailabilityDays = async () => {
     try {
-      const response = await axios.get('/availabilities');
-      setAvailabilities(response.data);
+      // Load availability days for current year and next year
+      const startDate = moment().startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
+      
+      const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
+      setAvailabilityDays(response.data);
       
       // Convert to calendar events with artist info
-      const calendarEvents = response.data.map(avail => ({
-        id: avail.id,
-        title: `Disponible — ${avail.artist_name || 'Artiste inconnu'}`,
-        start: new Date(avail.start_datetime),
-        end: new Date(avail.end_datetime),
+      const calendarEvents = response.data.map(day => ({
+        id: day.id,
+        title: `Disponible — ${day.artist_name || 'Artiste inconnu'}`,
+        start: new Date(`${day.date}T00:00:00`),
+        end: new Date(`${day.date}T23:59:59`),
+        allDay: true,
         resource: {
-          ...avail,
-          artist_name: avail.artist_name || 'Artiste inconnu'
-        },
-        allDay: avail.type === 'journée_entière'
+          ...day,
+          artist_name: day.artist_name || 'Artiste inconnu'
+        }
       }));
       
       setEvents(calendarEvents);
     } catch (error) {
-      console.error('Error loading availabilities:', error);
+      console.error('Error loading availability days:', error);
       toast.error('Erreur lors du chargement des disponibilités');
     }
   };
@@ -118,35 +122,20 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
-  const getAvailableArtistsForDate = (date) => {
-    const startOfDay = moment(date).startOf('day');
-    const endOfDay = moment(date).endOf('day');
-    
-    const availableArtists = [];
-    
-    for (const avail of availabilities) {
-      const availStart = moment(avail.start_datetime);
-      const availEnd = moment(avail.end_datetime);
-      
-      // Check if availability overlaps with selected date
-      if (availStart.isSameOrBefore(endOfDay) && availEnd.isSameOrAfter(startOfDay)) {
-        const artist = artists.find(a => a.id === avail.artist_id);
-        if (artist && !availableArtists.find(a => a.id === artist.id)) {
-          availableArtists.push({
-            ...artist,
-            availability: avail
-          });
-        }
-      }
+  const loadAvailableArtistsForDate = async (dateStr) => {
+    try {
+      const response = await axios.get(`/availability-days/${dateStr}`);
+      setAvailableArtists(response.data);
+    } catch (error) {
+      console.error('Error loading available artists:', error);
+      setAvailableArtists([]);
     }
-    
-    return availableArtists.sort((a, b) => a.nom_de_scene.localeCompare(b.nom_de_scene));
   };
 
   const handleSelectSlot = ({ start }) => {
+    const dateStr = moment(start).format('YYYY-MM-DD');
     setSelectedDate(start);
-    const available = getAvailableArtistsForDate(start);
-    setFilteredArtists(available);
+    loadAvailableArtistsForDate(dateStr);
   };
 
   const getStatusBadge = (status) => {
@@ -163,29 +152,25 @@ const AdminDashboard = ({ user, onLogout }) => {
     );
   };
 
-  const exportToCSV = () => {
-    const csvData = availabilities.map(avail => {
-      const artist = artists.find(a => a.id === avail.artist_id);
-      return {
-        'Artiste': artist?.nom_de_scene || 'Inconnu',
-        'Email': artist?.email || '',
-        'Début': moment(avail.start_datetime).format('DD/MM/YYYY HH:mm'),
-        'Fin': moment(avail.end_datetime).format('DD/MM/YYYY HH:mm'),
-        'Type': avail.type,
-        'Note': avail.note || ''
-      };
-    });
-
-    const csv = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).map(value => `"${value}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `disponibilites_${moment().format('YYYY-MM-DD')}.csv`;
-    link.click();
+  const exportToCSV = async () => {
+    try {
+      const startDate = moment().startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(1, 'year').endOf('year').format('YYYY-MM-DD');
+      
+      const response = await axios.get(`/export/csv?start_date=${startDate}&end_date=${endDate}`);
+      
+      // Create and download CSV file
+      const blob = new Blob([response.data.csv_content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = response.data.filename;
+      link.click();
+      
+      toast.success('Export CSV généré avec succès');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Erreur lors de l\'export CSV');
+    }
   };
 
   if (loading) {
@@ -211,7 +196,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   Administration
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Gestion du calendrier des disponibilités
+                  Calendrier des disponibilités (journées entières)
                 </p>
               </div>
             </div>
@@ -246,6 +231,9 @@ const AdminDashboard = ({ user, onLogout }) => {
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder="artiste@email.com"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        L'artiste pourra indiquer ses disponibilités par journées entières jusqu'à 18 mois dans le futur.
+                      </p>
                     </div>
                     <Button onClick={sendInvitation} className="w-full" disabled={!inviteEmail}>
                       Envoyer l'invitation
@@ -278,6 +266,24 @@ const AdminDashboard = ({ user, onLogout }) => {
 
           {/* Calendar Tab */}
           <TabsContent value="calendar" className="space-y-6">
+            {/* Info Card */}
+            <Card className="border-purple-200 bg-purple-50 fade-in">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-purple-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-purple-900 mb-2">Vue Administrateur</h3>
+                    <ul className="text-sm text-purple-800 space-y-1">
+                      <li>• <strong>Calendrier agrégé</strong> de tous les artistes (journées entières)</li>
+                      <li>• <strong>Cliquez sur une date</strong> pour voir qui est disponible ce jour</li>
+                      <li>• Disponibilités affichées : "Disponible — [Nom de scène]"</li>
+                      <li>• Export CSV disponible avec tous les détails</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Calendar */}
               <div className="lg:col-span-2">
@@ -285,7 +291,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Calendar className="h-5 w-5 mr-2" />
-                      Calendrier agrégé
+                      Calendrier agrégé ({availabilityDays.length} jours)
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -297,21 +303,20 @@ const AdminDashboard = ({ user, onLogout }) => {
                         endAccessor="end"
                         onSelectSlot={handleSelectSlot}
                         selectable
-                        views={['month', 'week', 'day']}
+                        views={['month']}
+                        view="month"
                         messages={{
                           next: 'Suivant',
                           previous: 'Précédent',
                           today: "Aujourd'hui",
                           month: 'Mois',
-                          week: 'Semaine',
-                          day: 'Jour',
-                          agenda: 'Agenda',
                           date: 'Date',
-                          time: 'Heure',
                           event: 'Événement',
                           noEventsInRange: 'Aucune disponibilité dans cette période'
                         }}
                         culture="fr"
+                        popup
+                        popupOffset={30}
                       />
                     </div>
                   </CardContent>
@@ -335,24 +340,39 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <CardContent>
                     {selectedDate ? (
                       <div className="space-y-3">
-                        {filteredArtists.length > 0 ? (
-                          filteredArtists.map((artist) => (
+                        {availableArtists.length > 0 ? (
+                          availableArtists.map((artist) => (
                             <div key={artist.id} className="p-3 bg-gray-50 rounded-lg">
                               <div className="flex items-center space-x-2">
                                 <Music className="h-4 w-4 text-purple-600" />
-                                <h4 className="font-medium">{artist.nom_de_scene}</h4>
+                                <h4 className="font-medium">{artist.nom_de_scene || artist.email}</h4>
                               </div>
                               <p className="text-sm text-gray-600 mt-1">{artist.email}</p>
-                              {artist.availability?.note && (
-                                <p className="text-sm text-blue-600 mt-1">
-                                  {artist.availability.note}
-                                </p>
+                              
+                              {artist.telephone && (
+                                <div className="flex items-center text-sm text-gray-600 mt-1">
+                                  <Phone className="h-3 w-3 mr-1" />
+                                  {artist.telephone}
+                                </div>
                               )}
-                              <div className="flex items-center space-x-2 mt-2 text-xs text-gray-500">
-                                <Clock className="h-3 w-3" />
-                                <span>
-                                  {moment(artist.availability.start_datetime).format('HH:mm')} - 
-                                  {moment(artist.availability.end_datetime).format('HH:mm')}
+                              
+                              {artist.lien && (
+                                <div className="flex items-center text-sm mt-1">
+                                  <LinkIcon className="h-3 w-3 mr-1" />
+                                  <a 
+                                    href={artist.lien} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline text-sm"
+                                  >
+                                    Voir profil
+                                  </a>
+                                </div>
+                              )}
+                              
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                  Disponible toute la journée
                                 </span>
                               </div>
                             </div>
@@ -421,7 +441,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                         
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-xs text-gray-500">
-                            {availabilities.filter(a => a.artist_id === artist.id).length} disponibilités
+                            {availabilityDays.filter(day => day.artist_id === artist.id).length} jours disponibles
                           </p>
                         </div>
                       </CardContent>
