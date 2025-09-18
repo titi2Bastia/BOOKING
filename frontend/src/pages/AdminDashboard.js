@@ -18,7 +18,10 @@ import {
   Music,
   Phone,
   Link as LinkIcon,
-  Info
+  Info,
+  Eye,
+  DollarSign,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -26,6 +29,7 @@ import 'moment/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { toast } from 'sonner';
+import ArtistDetailModal from '../components/ArtistDetailModal';
 
 // Configure moment for French locale
 moment.locale('fr');
@@ -41,6 +45,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
   const [availableArtists, setAvailableArtists] = useState([]);
+  const [selectedArtistId, setSelectedArtistId] = useState(null);
+  const [showArtistDetail, setShowArtistDetail] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -138,6 +144,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     loadAvailableArtistsForDate(dateStr);
   };
 
+  const handleViewArtistDetail = (artistId) => {
+    setSelectedArtistId(artistId);
+    setShowArtistDetail(true);
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       'envoyée': 'bg-yellow-100 text-yellow-800',
@@ -173,6 +184,8 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -193,10 +206,10 @@ const AdminDashboard = ({ user, onLogout }) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Administration
+                  EasyBookEvent Admin
                 </h1>
                 <p className="text-sm text-gray-600">
-                  Calendrier des disponibilités (journées entières)
+                  Gestion des artistes et disponibilités
                 </p>
               </div>
             </div>
@@ -213,9 +226,9 @@ const AdminDashboard = ({ user, onLogout }) => {
               
               <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
                 <DialogTrigger asChild>
-                  <Button size="sm">
+                  <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600">
                     <Plus className="h-4 w-4 mr-2" />
-                    Inviter
+                    Inviter un artiste
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -232,7 +245,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                         placeholder="artiste@email.com"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        L'artiste pourra indiquer ses disponibilités par journées entières jusqu'à 18 mois dans le futur.
+                        L'artiste recevra un email avec un lien pour créer son profil complet.
                       </p>
                     </div>
                     <Button onClick={sendInvitation} className="w-full" disabled={!inviteEmail}>
@@ -277,7 +290,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                       <li>• <strong>Calendrier agrégé</strong> de tous les artistes (journées entières)</li>
                       <li>• <strong>Cliquez sur une date</strong> pour voir qui est disponible ce jour</li>
                       <li>• Disponibilités affichées : "Disponible — [Nom de scène]"</li>
-                      <li>• Export CSV disponible avec tous les détails</li>
+                      <li>• Export CSV avec tarifs et informations complètes</li>
                     </ul>
                   </div>
                 </div>
@@ -342,31 +355,38 @@ const AdminDashboard = ({ user, onLogout }) => {
                       <div className="space-y-3">
                         {availableArtists.length > 0 ? (
                           availableArtists.map((artist) => (
-                            <div key={artist.id} className="p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center space-x-2">
-                                <Music className="h-4 w-4 text-purple-600" />
-                                <h4 className="font-medium">{artist.nom_de_scene || artist.email}</h4>
-                              </div>
-                              <p className="text-sm text-gray-600 mt-1">{artist.email}</p>
-                              
-                              {artist.telephone && (
-                                <div className="flex items-center text-sm text-gray-600 mt-1">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  {artist.telephone}
+                            <div key={artist.id} className="p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center space-x-3">
+                                  {artist.logo_url ? (
+                                    <img
+                                      src={`${BACKEND_URL}/${artist.logo_url}`}
+                                      alt={artist.nom_de_scene}
+                                      className="w-8 h-8 object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    <Music className="h-8 w-8 text-purple-600" />
+                                  )}
+                                  <div>
+                                    <h4 className="font-medium">{artist.nom_de_scene || artist.email}</h4>
+                                    <p className="text-sm text-gray-600">{artist.email}</p>
+                                  </div>
                                 </div>
-                              )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewArtistDetail(artist.id)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
                               
-                              {artist.lien && (
-                                <div className="flex items-center text-sm mt-1">
-                                  <LinkIcon className="h-3 w-3 mr-1" />
-                                  <a 
-                                    href={artist.lien} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:underline text-sm"
-                                  >
-                                    Voir profil
-                                  </a>
+                              {artist.tarif_soiree && (
+                                <div className="flex items-center mt-2">
+                                  <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                    {artist.tarif_soiree}
+                                  </Badge>
                                 </div>
                               )}
                               
@@ -404,50 +424,100 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {artists.map((artist) => (
-                    <Card key={artist.id} className="card-hover">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-full">
-                            <Music className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{artist.nom_de_scene || 'Profil incomplet'}</h3>
-                            <p className="text-sm text-gray-600">{artist.email}</p>
-                          </div>
-                        </div>
-                        
-                        {artist.telephone && (
-                          <div className="flex items-center text-sm text-gray-600 mb-1">
-                            <Phone className="h-4 w-4 mr-2" />
-                            {artist.telephone}
-                          </div>
-                        )}
-                        
-                        {artist.lien && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <LinkIcon className="h-4 w-4 mr-2" />
-                            <a 
-                              href={artist.lien} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline truncate"
+                {artists.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {artists.map((artist) => (
+                      <Card key={artist.id} className="card-hover">
+                        <CardContent className="pt-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              {artist.logo_url ? (
+                                <img
+                                  src={`${BACKEND_URL}/${artist.logo_url}`}
+                                  alt={artist.nom_de_scene}
+                                  className="w-12 h-12 object-cover rounded-lg border"
+                                />
+                              ) : (
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-lg">
+                                  <Music className="h-6 w-6 text-white" />
+                                </div>
+                              )}
+                              <div>
+                                <h3 className="font-semibold">{artist.nom_de_scene || 'Profil incomplet'}</h3>
+                                <p className="text-sm text-gray-600">{artist.email}</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewArtistDetail(artist.id)}
                             >
-                              Lien
-                            </a>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </div>
-                        )}
-                        
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs text-gray-500">
-                            {availabilityDays.filter(day => day.artist_id === artist.id).length} jours disponibles
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                          
+                          {artist.tarif_soiree && (
+                            <div className="flex items-center mb-2">
+                              <DollarSign className="h-4 w-4 mr-2 text-green-600" />
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                {artist.tarif_soiree}
+                              </Badge>
+                            </div>
+                          )}
+                          
+                          {artist.telephone && (
+                            <div className="flex items-center text-sm text-gray-600 mb-1">
+                              <Phone className="h-4 w-4 mr-2" />
+                              {artist.telephone}
+                            </div>
+                          )}
+                          
+                          {artist.lien && (
+                            <div className="flex items-center text-sm text-gray-600 mb-2">
+                              <LinkIcon className="h-4 w-4 mr-2" />
+                              <a 
+                                href={artist.lien} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline truncate"
+                              >
+                                Lien
+                              </a>
+                            </div>
+                          )}
+
+                          {artist.gallery_urls && artist.gallery_urls.length > 0 && (
+                            <div className="flex items-center text-sm text-gray-600 mb-2">
+                              <ImageIcon className="h-4 w-4 mr-2" />
+                              {artist.gallery_urls.length} photo(s) en galerie
+                            </div>
+                          )}
+                          
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-xs text-gray-500">
+                              {artist.availability_count} jours disponibles
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun artiste inscrit</h3>
+                    <p className="text-gray-600 mb-6">
+                      Commencez par inviter vos premiers artistes pour qu'ils créent leur profil.
+                    </p>
+                    <Button 
+                      onClick={() => setShowInviteDialog(true)}
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Inviter le premier artiste
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -462,35 +532,56 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {invitations.map((invitation) => (
-                    <div key={invitation.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-medium">{invitation.email}</p>
-                        <p className="text-sm text-gray-600">
-                          Créée le {moment(invitation.created_at).format('DD/MM/YYYY à HH:mm')}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Expire le {moment(invitation.expires_at).format('DD/MM/YYYY à HH:mm')}
-                        </p>
+                {invitations.length > 0 ? (
+                  <div className="space-y-3">
+                    {invitations.map((invitation) => (
+                      <div key={invitation.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <p className="font-medium">{invitation.email}</p>
+                          <p className="text-sm text-gray-600">
+                            Créée le {moment(invitation.created_at).format('DD/MM/YYYY à HH:mm')}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Expire le {moment(invitation.expires_at).format('DD/MM/YYYY à HH:mm')}
+                          </p>
+                        </div>
+                        <div>
+                          {getStatusBadge(invitation.status)}
+                        </div>
                       </div>
-                      <div>
-                        {getStatusBadge(invitation.status)}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {invitations.length === 0 && (
-                    <p className="text-gray-500 text-center py-8">
-                      Aucune invitation envoyée
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Mail className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune invitation envoyée</h3>
+                    <p className="text-gray-600 mb-6">
+                      Invitez des artistes pour qu'ils puissent créer leur profil et gérer leurs disponibilités.
                     </p>
-                  )}
-                </div>
+                    <Button 
+                      onClick={() => setShowInviteDialog(true)}
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Envoyer la première invitation
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Artist Detail Modal */}
+      <ArtistDetailModal
+        artistId={selectedArtistId}
+        isOpen={showArtistDetail}
+        onClose={() => {
+          setShowArtistDetail(false);
+          setSelectedArtistId(null);
+        }}
+      />
     </div>
   );
 };
