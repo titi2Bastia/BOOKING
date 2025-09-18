@@ -446,7 +446,12 @@ async def get_availability_days(
                 query["date"] = {"$lte": end_date}
         
         availability_days = await db.availability_days.find(query).to_list(1000)
-        return [AvailabilityDay(**day).dict() for day in availability_days]
+        result = []
+        for day in availability_days:
+            # Remove MongoDB _id field and ensure proper data types
+            day.pop('_id', None)
+            result.append(day)
+        return result
     
     else:
         # Admin can see all availability days with artist info
@@ -468,12 +473,12 @@ async def get_availability_days(
             profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
             user = await db.users.find_one({"id": day['artist_id']})
             
-            # Create clean availability day data
-            clean_day = AvailabilityDay(**day).dict()
-            clean_day['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
-            clean_day['artist_email'] = user.get('email') if user else ''
+            # Remove MongoDB _id field and add artist info
+            day.pop('_id', None)
+            day['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
+            day['artist_email'] = user.get('email') if user else ''
             
-            result.append(clean_day)
+            result.append(day)
         
         return result
 
