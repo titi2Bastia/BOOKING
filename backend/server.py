@@ -720,6 +720,10 @@ async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user:
     
     date_str = day_data.date.isoformat()
     
+    # Check if date is blocked by admin
+    if await is_date_blocked(date_str):
+        raise HTTPException(status_code=400, detail="Cette date est bloquée par l'administrateur")
+    
     # Check if availability already exists
     existing = await db.availability_days.find_one({
         "artist_id": current_user.id,
