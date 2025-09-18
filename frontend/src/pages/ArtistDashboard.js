@@ -5,13 +5,15 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Calendar, Clock, Music, User, Phone, Link as LinkIcon, Plus, Edit, Trash2, LogOut, Info } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Calendar, Clock, Music, User, Phone, Link as LinkIcon, Plus, Edit, Trash2, LogOut, Info, Settings } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { toast } from 'sonner';
+import ArtistProfileForm from '../components/ArtistProfileForm';
 
 // Configure moment for French locale
 moment.locale('fr');
@@ -27,13 +29,6 @@ const ArtistDashboard = ({ user, onLogout }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [dayNote, setDayNote] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Profile form state
-  const [profileForm, setProfileForm] = useState({
-    nom_de_scene: '',
-    telephone: '',
-    lien: ''
-  });
 
   useEffect(() => {
     loadData();
@@ -56,11 +51,6 @@ const ArtistDashboard = ({ user, onLogout }) => {
     try {
       const response = await axios.get('/profile');
       setProfile(response.data);
-      setProfileForm({
-        nom_de_scene: response.data.nom_de_scene || '',
-        telephone: response.data.telephone || '',
-        lien: response.data.lien || ''
-      });
     } catch (error) {
       if (error.response?.status !== 404) {
         console.error('Error loading profile:', error);
@@ -94,16 +84,8 @@ const ArtistDashboard = ({ user, onLogout }) => {
     }
   };
 
-  const saveProfile = async () => {
-    try {
-      const response = await axios.post('/profile', profileForm);
-      setProfile(response.data);
-      setShowProfileDialog(false);
-      toast.success('Profil mis à jour avec succès');
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Erreur lors de la sauvegarde du profil');
-    }
+  const handleProfileUpdate = (updatedProfile) => {
+    setProfile(updatedProfile);
   };
 
   const toggleAvailabilityDay = async (date, note = '') => {
@@ -237,7 +219,7 @@ const ArtistDashboard = ({ user, onLogout }) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  Mes Disponibilités
+                  EasyBookEvent
                 </h1>
                 <p className="text-sm text-gray-600">
                   {profile?.nom_de_scene || user.email} • Journées entières uniquement
@@ -249,43 +231,18 @@ const ArtistDashboard = ({ user, onLogout }) => {
               <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <User className="h-4 w-4 mr-2" />
-                    Profil
+                    <Settings className="h-4 w-4 mr-2" />
+                    Mon Profil
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Mon profil</DialogTitle>
+                    <DialogTitle>Mon profil artiste</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Nom de scène *</Label>
-                      <Input
-                        value={profileForm.nom_de_scene}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, nom_de_scene: e.target.value }))}
-                        placeholder="Votre nom d'artiste"
-                      />
-                    </div>
-                    <div>
-                      <Label>Téléphone</Label>
-                      <Input
-                        value={profileForm.telephone}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, telephone: e.target.value }))}
-                        placeholder="Votre numéro de téléphone"
-                      />
-                    </div>
-                    <div>
-                      <Label>Lien (site web, réseaux sociaux)</Label>
-                      <Input
-                        value={profileForm.lien}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, lien: e.target.value }))}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <Button onClick={saveProfile} className="w-full">
-                      Sauvegarder
-                    </Button>
-                  </div>
+                  <ArtistProfileForm 
+                    profile={profile} 
+                    onProfileUpdate={handleProfileUpdate}
+                  />
                 </DialogContent>
               </Dialog>
 
@@ -304,98 +261,94 @@ const ArtistDashboard = ({ user, onLogout }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Info */}
-        {profile && (
-          <Card className="mb-8 fade-in">
-            <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-full">
-                  <Music className="h-8 w-8 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900">{profile.nom_de_scene}</h2>
-                  <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                    {profile.telephone && (
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-1" />
-                        {profile.telephone}
-                      </div>
-                    )}
-                    {profile.lien && (
-                      <div className="flex items-center">
-                        <LinkIcon className="h-4 w-4 mr-1" />
-                        <a href={profile.lien} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                          Lien
-                        </a>
-                      </div>
-                    )}
+        <Tabs defaultValue="calendar" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+            <TabsTrigger value="profile">Mon Profil</TabsTrigger>
+          </TabsList>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-6">
+            {/* Info Card */}
+            <Card className="border-blue-200 bg-blue-50 fade-in">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-900 mb-2">Comment ça fonctionne</h3>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• <strong>Cliquez sur un jour</strong> pour basculer votre disponibilité (ON/OFF)</li>
+                      <li>• <strong>Journées entières uniquement</strong> - pas de créneaux horaires</li>
+                      <li>• <strong>Dates passées :</strong> grisées et non modifiables</li>
+                      <li>• <strong>Fenêtre d'édition :</strong> jusqu'à 18 mois dans le futur</li>
+                      <li>• Vous pouvez ajouter une note optionnelle à chaque jour</li>
+                    </ul>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
 
-        {/* Info Card */}
-        <Card className="mb-6 fade-in border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-3">
-              <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-2">Comment ça fonctionne</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• <strong>Cliquez sur un jour</strong> pour basculer votre disponibilité (ON/OFF)</li>
-                  <li>• <strong>Journées entières uniquement</strong> - pas de créneaux horaires</li>
-                  <li>• <strong>Dates passées :</strong> grisées et non modifiables</li>
-                  <li>• <strong>Fenêtre d'édition :</strong> jusqu'à 18 mois dans le futur</li>
-                  <li>• Vous pouvez ajouter une note optionnelle à chaque jour</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Calendar */}
+            <Card className="fade-in">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    Calendrier de disponibilités ({availabilityDays.length} jours)
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div style={{ height: '600px' }}>
+                  <BigCalendar
+                    localizer={localizer}
+                    events={events}
+                    startAccessor="start"
+                    endAccessor="end"
+                    onSelectSlot={handleSelectSlot}
+                    onSelectEvent={handleSelectEvent}
+                    selectable
+                    views={['month']}
+                    view="month"
+                    date={currentDate}
+                    onNavigate={setCurrentDate}
+                    dayPropGetter={dayPropGetter}
+                    messages={{
+                      next: 'Suivant',
+                      previous: 'Précédent',
+                      today: "Aujourd'hui",
+                      month: 'Mois',
+                      date: 'Date',
+                      event: 'Événement',
+                      noEventsInRange: 'Aucune disponibilité dans cette période'
+                    }}
+                    culture="fr"
+                    popup
+                    popupOffset={30}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Calendar */}
-        <Card className="fade-in">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Calendrier de disponibilités ({availabilityDays.length} jours)
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div style={{ height: '600px' }}>
-              <BigCalendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                onSelectSlot={handleSelectSlot}
-                onSelectEvent={handleSelectEvent}
-                selectable
-                views={['month']}
-                view="month"
-                date={currentDate}
-                onNavigate={setCurrentDate}
-                dayPropGetter={dayPropGetter}
-                messages={{
-                  next: 'Suivant',
-                  previous: 'Précédent',
-                  today: "Aujourd'hui",
-                  month: 'Mois',
-                  date: 'Date',
-                  event: 'Événement',
-                  noEventsInRange: 'Aucune disponibilité dans cette période'
-                }}
-                culture="fr"
-                popup
-                popupOffset={30}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <Card className="fade-in">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Mon profil artiste
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ArtistProfileForm 
+                  profile={profile} 
+                  onProfileUpdate={handleProfileUpdate}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Day Dialog */}
         <Dialog open={showDayDialog} onOpenChange={setShowDayDialog}>
