@@ -404,28 +404,33 @@ async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user:
     if day_data.date > max_date:
         raise HTTPException(status_code=400, detail=f"Disponibilité trop lointaine (maximum {MAX_MONTHS_AHEAD} mois)")
     
+    date_str = day_data.date.isoformat()
+    
     # Check if availability already exists
     existing = await db.availability_days.find_one({
         "artist_id": current_user.id,
-        "date": day_data.date.isoformat()
+        "date": date_str
     })
     
     if existing:
         # Remove availability (toggle OFF)
-        await db.availability_days.delete_one({"id": existing['id']})
-        return {"action": "removed", "date": day_data.date.isoformat(), "available": False}
+        await db.availability_days.delete_one({"artist_id": current_user.id, "date": date_str})
+        return {"action": "removed", "date": date_str, "available": False}
     else:
         # Add availability (toggle ON)
         availability_dict = {
             "id": str(uuid.uuid4()),
             "artist_id": current_user.id,
-            "date": day_data.date.isoformat(),  # Convert date to string
-            "note": day_data.note,
+            "date": date_str,
+            "note": day_data.note or "",
             "color": day_data.color or "#3b82f6",
             "created_at": datetime.now(timezone.utc)
         }
         await db.availability_days.insert_one(availability_dict)
-        return {"action": "added", "date": day_data.date.isoformat(), "available": True, "availability": availability_dict}
+        
+        # Remove _id for return
+        availability_dict.pop('_id', None)
+        return {"action": "added", "date": date_str, "available": True, "availability": availability_dict}
 
 @api_router.get("/availability-days", response_model=List[Dict[str, Any]])
 async def get_availability_days(
