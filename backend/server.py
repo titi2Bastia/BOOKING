@@ -387,16 +387,45 @@ async def create_availability(availability_data: AvailabilityCreate, current_use
     await db.availabilities.insert_one(availability.dict())
     return availability
 
-@api_router.get("/availabilities", response_model=List[Availability])
+@api_router.get("/availabilities", response_model=List[Dict[str, Any]])
 async def get_availabilities(current_user: User = Depends(get_current_user)):
     if current_user.role == UserRole.ARTIST:
         # Artists can only see their own availabilities
         availabilities = await db.availabilities.find({"artist_id": current_user.id}).to_list(1000)
+        return [Availability(**avail).dict() for avail in availabilities]
     else:
-        # Admin can see all availabilities
-        availabilities = await db.availabilities.find().to_list(1000)
-    
-    return [Availability(**avail) for avail in availabilities]
+        # Admin can see all availabilities with artist info
+        pipeline = [
+            {"$lookup": {
+                "from": "artist_profiles",
+                "localField": "artist_id",
+                "foreignField": "user_id",
+                "as": "artist_profile"
+            }},
+            {"$lookup": {
+                "from": "users",
+                "localField": "artist_id",
+                "foreignField": "id",
+                "as": "artist_user"
+            }}
+        ]
+        
+        availabilities = await db.availabilities.aggregate(pipeline).to_list(1000)
+        
+        result = []
+        for avail in availabilities:
+            # Get artist info
+            profile = avail.get('artist_profile', [{}])[0] if avail.get('artist_profile') else {}
+            user = avail.get('artist_user', [{}])[0] if avail.get('artist_user') else {}
+            
+            # Clean up the availability data
+            clean_avail = {k: v for k, v in avail.items() if k not in ['artist_profile', 'artist_user']}
+            clean_avail['artist_name'] = profile.get('nom_de_scene', user.get('email', 'Artiste inconnu'))
+            clean_avail['artist_email'] = user.get('email', '')
+            
+            result.append(clean_avail)
+        
+        return result
 
 @api_router.get("/availabilities/{availability_id}", response_model=Availability)
 async def get_availability(availability_id: str, current_user: User = Depends(get_current_user)):
