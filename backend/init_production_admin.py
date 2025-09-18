@@ -41,16 +41,9 @@ async def init_production_admin():
     
     print("✅ Cleared all existing data")
     
-    # Create admin user (replace with your real admin email)
-    admin_email = input("Entrez l'email administrateur : ").strip()
-    if not admin_email or '@' not in admin_email:
-        print("❌ Email invalide")
-        return
-    
-    admin_password = input("Entrez le mot de passe administrateur : ").strip()
-    if len(admin_password) < 8:
-        print("❌ Le mot de passe doit contenir au moins 8 caractères")
-        return
+    # Create admin user with default values for demo
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@easybookevent.app')
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'AdminSecure2024!')
     
     admin_user = {
         "id": "admin-production",
@@ -71,12 +64,14 @@ async def init_production_admin():
     print("\n🎉 Production environment initialized!")
     print("\n📝 Admin account:")
     print(f"   Email: {admin_email}")
-    print("   Password: [as entered]")
+    print(f"   Password: {admin_password}")
     print("\n🚀 The application is ready for production use!")
     print("\n📋 Next steps:")
     print("   1. Log in with your admin account")
-    print("   2. Start inviting artists via the admin interface")
-    print("   3. Artists will receive emails to create their profiles")
+    print("   2. Change the default password in your profile")
+    print("   3. Start inviting artists via the admin interface")
+    print("   4. Artists will receive emails to create their profiles")
+    print("\n⚠️  IMPORTANT: Change the default admin password after first login!")
 
 if __name__ == "__main__":
     asyncio.run(init_production_admin())
