@@ -345,11 +345,11 @@ class ArtistCalendarAPITester:
         if not success:
             return False
         
-        # Get all availabilities (admin view)
-        success, availabilities = self.run_test(
-            "Get All Availabilities (Admin)",
+        # Get all availability days (admin view)
+        success, availability_days = self.run_test(
+            "Get All Availability Days (Admin)",
             "GET",
-            "availabilities",
+            "availability-days",
             200,
             headers=headers
         )
