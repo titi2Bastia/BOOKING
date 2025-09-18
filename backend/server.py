@@ -395,33 +395,18 @@ async def get_availabilities(current_user: User = Depends(get_current_user)):
         return [Availability(**avail).dict() for avail in availabilities]
     else:
         # Admin can see all availabilities with artist info
-        pipeline = [
-            {"$lookup": {
-                "from": "artist_profiles",
-                "localField": "artist_id",
-                "foreignField": "user_id",
-                "as": "artist_profile"
-            }},
-            {"$lookup": {
-                "from": "users",
-                "localField": "artist_id",
-                "foreignField": "id",
-                "as": "artist_user"
-            }}
-        ]
-        
-        availabilities = await db.availabilities.aggregate(pipeline).to_list(1000)
+        availabilities = await db.availabilities.find().to_list(1000)
         
         result = []
         for avail in availabilities:
-            # Get artist info
-            profile = avail.get('artist_profile', [{}])[0] if avail.get('artist_profile') else {}
-            user = avail.get('artist_user', [{}])[0] if avail.get('artist_user') else {}
+            # Get artist profile
+            profile = await db.artist_profiles.find_one({"user_id": avail['artist_id']})
+            user = await db.users.find_one({"id": avail['artist_id']})
             
-            # Clean up the availability data
-            clean_avail = {k: v for k, v in avail.items() if k not in ['artist_profile', 'artist_user']}
-            clean_avail['artist_name'] = profile.get('nom_de_scene', user.get('email', 'Artiste inconnu'))
-            clean_avail['artist_email'] = user.get('email', '')
+            # Create clean availability data
+            clean_avail = Availability(**avail).dict()
+            clean_avail['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
+            clean_avail['artist_email'] = user.get('email') if user else ''
             
             result.append(clean_avail)
         
