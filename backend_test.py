@@ -161,49 +161,44 @@ class ArtistCalendarAPITester:
         
         return False
 
-    def test_availability_operations(self):
-        """Test availability CRUD operations"""
+    def test_availability_day_operations(self):
+        """Test new availability day operations (full days only)"""
         if not self.artist_token:
-            self.log_test("Availability Operations", False, "No artist token available")
+            self.log_test("Availability Day Operations", False, "No artist token available")
             return False
 
         headers = {'Authorization': f'Bearer {self.artist_token}'}
         
-        # Create availability
-        now = datetime.now(timezone.utc)
-        start_time = now + timedelta(days=1)
-        end_time = start_time + timedelta(hours=2)
-        
-        availability_data = {
-            "start_datetime": start_time.isoformat(),
-            "end_datetime": end_time.isoformat(),
-            "type": "créneau",
-            "note": "Test availability",
-            "color": "#ff0000"
+        # Test toggle availability day (add)
+        tomorrow = (datetime.now() + timedelta(days=1)).date()
+        toggle_data = {
+            "date": tomorrow.isoformat(),
+            "note": "Test availability day",
+            "color": "#3b82f6"
         }
         
-        success, created_availability = self.run_test(
-            "Create Availability",
+        success, toggle_response = self.run_test(
+            "Toggle Availability Day (Add)",
             "POST",
-            "availabilities",
+            "availability-days/toggle",
             200,
-            data=availability_data,
+            data=toggle_data,
             headers=headers
         )
         
         if not success:
             return False
         
-        availability_id = created_availability.get('id')
-        if not availability_id:
-            self.log_test("Create Availability", False, "No ID returned")
+        # Verify it was added
+        if toggle_response.get('action') != 'added' or not toggle_response.get('available'):
+            self.log_test("Toggle Availability Day (Add)", False, f"Unexpected response: {toggle_response}")
             return False
         
-        # Get availabilities
-        success, availabilities = self.run_test(
-            "Get Artist Availabilities",
+        # Get availability days
+        success, availability_days = self.run_test(
+            "Get Artist Availability Days",
             "GET",
-            "availabilities",
+            "availability-days",
             200,
             headers=headers
         )
@@ -211,37 +206,124 @@ class ArtistCalendarAPITester:
         if not success:
             return False
         
-        # Update availability
-        update_data = {
-            "start_datetime": start_time.isoformat(),
-            "end_datetime": (start_time + timedelta(hours=3)).isoformat(),
-            "type": "journée_entière",
-            "note": "Updated test availability",
-            "color": "#00ff00"
+        # Test toggle availability day (remove)
+        success, toggle_response = self.run_test(
+            "Toggle Availability Day (Remove)",
+            "POST",
+            "availability-days/toggle",
+            200,
+            data={"date": tomorrow.isoformat()},
+            headers=headers
+        )
+        
+        if not success:
+            return False
+        
+        # Verify it was removed
+        if toggle_response.get('action') != 'removed' or toggle_response.get('available'):
+            self.log_test("Toggle Availability Day (Remove)", False, f"Unexpected response: {toggle_response}")
+            return False
+        
+        return True
+
+    def test_availability_day_validation(self):
+        """Test availability day validation rules"""
+        if not self.artist_token:
+            self.log_test("Availability Day Validation", False, "No artist token available")
+            return False
+
+        headers = {'Authorization': f'Bearer {self.artist_token}'}
+        
+        # Test past date (should fail)
+        yesterday = (datetime.now() - timedelta(days=1)).date()
+        past_date_data = {
+            "date": yesterday.isoformat(),
+            "note": "Should fail - past date"
         }
         
         success, _ = self.run_test(
-            "Update Availability",
-            "PUT",
-            f"availabilities/{availability_id}",
-            200,
-            data=update_data,
+            "Toggle Past Date (Should Fail)",
+            "POST",
+            "availability-days/toggle",
+            400,  # Should fail with 400
+            data=past_date_data,
             headers=headers
         )
         
         if not success:
             return False
         
-        # Delete availability
+        # Test too far future date (should fail)
+        far_future = (datetime.now() + timedelta(days=19*30)).date()  # 19 months
+        far_future_data = {
+            "date": far_future.isoformat(),
+            "note": "Should fail - too far in future"
+        }
+        
         success, _ = self.run_test(
-            "Delete Availability",
-            "DELETE",
-            f"availabilities/{availability_id}",
+            "Toggle Far Future Date (Should Fail)",
+            "POST",
+            "availability-days/toggle",
+            400,  # Should fail with 400
+            data=far_future_data,
+            headers=headers
+        )
+        
+        return success
+
+    def test_availability_day_admin_view(self):
+        """Test admin view of availability days"""
+        if not self.admin_token:
+            self.log_test("Admin Availability Day View", False, "No admin token available")
+            return False
+
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        # Get all availability days (admin view)
+        success, availability_days = self.run_test(
+            "Get All Availability Days (Admin)",
+            "GET",
+            "availability-days",
+            200,
+            headers=headers
+        )
+        
+        if not success:
+            return False
+        
+        # Test get artists available on specific date
+        test_date = "2024-09-23"  # From the test data mentioned
+        success, artists = self.run_test(
+            "Get Artists Available on Date",
+            "GET",
+            f"availability-days/{test_date}",
             200,
             headers=headers
         )
         
         return success
+
+    def test_csv_export(self):
+        """Test CSV export functionality"""
+        if not self.admin_token:
+            self.log_test("CSV Export", False, "No admin token available")
+            return False
+
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        # Test CSV export
+        success, csv_data = self.run_test(
+            "Export CSV",
+            "GET",
+            "export/csv",
+            200,
+            headers=headers
+        )
+        
+        if success and 'csv_content' in csv_data:
+            return True
+        
+        return False
 
     def test_admin_operations(self):
         """Test admin-only operations"""
