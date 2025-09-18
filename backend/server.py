@@ -156,7 +156,31 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends()):
+def get_token_from_header(authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token d'authentification manquant",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Type d'authentification invalide",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return token
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Format du token invalide",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+async def get_current_user(token: str = Depends(get_token_from_header)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
