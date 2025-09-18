@@ -416,14 +416,16 @@ async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user:
         return {"action": "removed", "date": day_data.date.isoformat(), "available": False}
     else:
         # Add availability (toggle ON)
-        availability = AvailabilityDay(
-            artist_id=current_user.id,
-            date=day_data.date,
-            note=day_data.note,
-            color=day_data.color or "#3b82f6"
-        )
-        await db.availability_days.insert_one(availability.dict())
-        return {"action": "added", "date": day_data.date.isoformat(), "available": True, "availability": availability.dict()}
+        availability_dict = {
+            "id": str(uuid.uuid4()),
+            "artist_id": current_user.id,
+            "date": day_data.date.isoformat(),  # Convert date to string
+            "note": day_data.note,
+            "color": day_data.color or "#3b82f6",
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.availability_days.insert_one(availability_dict)
+        return {"action": "added", "date": day_data.date.isoformat(), "available": True, "availability": availability_dict}
 
 @api_router.get("/availability-days", response_model=List[Dict[str, Any]])
 async def get_availability_days(
