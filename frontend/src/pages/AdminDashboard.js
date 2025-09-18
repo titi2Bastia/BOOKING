@@ -21,7 +21,8 @@ import {
   Info,
   Eye,
   DollarSign,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Ban
 } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -30,6 +31,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { toast } from 'sonner';
 import ArtistDetailModal from '../components/ArtistDetailModal';
+import BlockedDatesManager from '../components/BlockedDatesManager';
 
 // Configure moment for French locale
 moment.locale('fr');
@@ -38,6 +40,7 @@ const localizer = momentLocalizer(moment);
 const AdminDashboard = ({ user, onLogout }) => {
   const [artists, setArtists] = useState([]);
   const [availabilityDays, setAvailabilityDays] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [invitations, setInvitations] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       await Promise.all([
         loadArtists(),
         loadAvailabilityDays(),
+        loadBlockedDates(),
         loadInvitations()
       ]);
     } catch (error) {
@@ -85,24 +89,63 @@ const AdminDashboard = ({ user, onLogout }) => {
       const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
       setAvailabilityDays(response.data);
       
-      // Convert to calendar events with artist info
-      const calendarEvents = response.data.map(day => ({
-        id: day.id,
+      updateCalendarEvents(response.data, blockedDates);
+    } catch (error) {
+      console.error('Error loading availability days:', error);
+      toast.error('Erreur lors du chargement des disponibilités');
+    }
+  };
+
+  const loadBlockedDates = async () => {
+    try {
+      // Load blocked dates for current year and next year
+      const startDate = moment().startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
+      
+      const response = await axios.get(`/blocked-dates?start_date=${startDate}&end_date=${endDate}`);
+      setBlockedDates(response.data);
+      
+      updateCalendarEvents(availabilityDays, response.data);
+    } catch (error) {
+      console.error('Error loading blocked dates:', error);
+    }
+  };
+
+  const updateCalendarEvents = (availabilities, blocked) => {
+    const calendarEvents = [];
+    
+    // Add availability events
+    availabilities.forEach(day => {
+      calendarEvents.push({
+        id: `avail-${day.id}`,
         title: `Disponible — ${day.artist_name || 'Artiste inconnu'}`,
         start: new Date(`${day.date}T00:00:00`),
         end: new Date(`${day.date}T23:59:59`),
         allDay: true,
         resource: {
           ...day,
+          type: 'availability',
           artist_name: day.artist_name || 'Artiste inconnu'
         }
-      }));
-      
-      setEvents(calendarEvents);
-    } catch (error) {
-      console.error('Error loading availability days:', error);
-      toast.error('Erreur lors du chargement des disponibilités');
-    }
+      });
+    });
+    
+    // Add blocked date events
+    blocked.forEach(blockedDate => {
+      calendarEvents.push({
+        id: `blocked-${blockedDate.id}`,
+        title: `🚫 Date bloquée ${blockedDate.note ? `(${blockedDate.note})` : ''}`,
+        start: new Date(`${blockedDate.date}T00:00:00`),
+        end: new Date(`${blockedDate.date}T23:59:59`),
+        allDay: true,
+        resource: {
+          ...blockedDate,
+          type: 'blocked'
+        }
+      });
+    });
+    
+    setEvents(calendarEvents);
   };
 
   const loadInvitations = async () => {
@@ -149,6 +192,11 @@ const AdminDashboard = ({ user, onLogout }) => {
     setShowArtistDetail(true);
   };
 
+  const handleBlockedDatesChange = (newBlockedDates) => {
+    setBlockedDates(newBlockedDates);
+    updateCalendarEvents(availabilityDays, newBlockedDates);
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       'envoyée': 'bg-yellow-100 text-yellow-800',
@@ -182,6 +230,21 @@ const AdminDashboard = ({ user, onLogout }) => {
       console.error('Export error:', error);
       toast.error('Erreur lors de l\'export CSV');
     }
+  };
+
+  const eventStyleGetter = (event) => {
+    if (event.resource?.type === 'blocked') {
+      return {
+        style: {
+          backgroundColor: '#dc2626',
+          borderColor: '#b91c1c',
+          color: 'white',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      };
+    }
+    return {};
   };
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -271,8 +334,9 @@ const AdminDashboard = ({ user, onLogout }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="calendar" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+            <TabsTrigger value="blocked">Dates bloquées</TabsTrigger>
             <TabsTrigger value="artists">Artistes</TabsTrigger>
             <TabsTrigger value="invitations">Invitations</TabsTrigger>
           </TabsList>
@@ -288,9 +352,9 @@ const AdminDashboard = ({ user, onLogout }) => {
                     <h3 className="font-semibold text-purple-900 mb-2">Vue Administrateur</h3>
                     <ul className="text-sm text-purple-800 space-y-1">
                       <li>• <strong>Calendrier agrégé</strong> de tous les artistes (journées entières)</li>
+                      <li>• <strong>Dates bloquées</strong> apparaissent en rouge avec 🚫</li>
                       <li>• <strong>Cliquez sur une date</strong> pour voir qui est disponible ce jour</li>
-                      <li>• Disponibilités affichées : "Disponible — [Nom de scène]"</li>
-                      <li>• Export CSV avec tarifs et informations complètes</li>
+                      <li>• Export CSV avec disponibilités et dates bloquées</li>
                     </ul>
                   </div>
                 </div>
@@ -302,9 +366,21 @@ const AdminDashboard = ({ user, onLogout }) => {
               <div className="lg:col-span-2">
                 <Card className="fade-in">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Calendar className="h-5 w-5 mr-2" />
-                      Calendrier agrégé ({availabilityDays.length} jours)
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Calendar className="h-5 w-5 mr-2" />
+                        Calendrier agrégé ({availabilityDays.length} dispos, {blockedDates.length} bloquées)
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                          <span>Disponibilités</span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
+                          <span>Dates bloquées</span>
+                        </div>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -318,6 +394,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                         selectable
                         views={['month']}
                         view="month"
+                        eventPropGetter={eventStyleGetter}
                         messages={{
                           next: 'Suivant',
                           previous: 'Précédent',
@@ -353,7 +430,21 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <CardContent>
                     {selectedDate ? (
                       <div className="space-y-3">
-                        {availableArtists.length > 0 ? (
+                        {/* Check if selected date is blocked */}
+                        {blockedDates.some(blocked => blocked.date === moment(selectedDate).format('YYYY-MM-DD')) ? (
+                          <div className="text-center py-6">
+                            <Ban className="h-12 w-12 text-red-500 mx-auto mb-3" />
+                            <h4 className="font-medium text-red-900 mb-2">Date bloquée</h4>
+                            <p className="text-red-700 text-sm">
+                              Cette date est bloquée par l'administration.
+                            </p>
+                            {blockedDates.find(blocked => blocked.date === moment(selectedDate).format('YYYY-MM-DD'))?.note && (
+                              <p className="text-red-600 text-sm mt-1">
+                                {blockedDates.find(blocked => blocked.date === moment(selectedDate).format('YYYY-MM-DD')).note}
+                              </p>
+                            )}
+                          </div>
+                        ) : availableArtists.length > 0 ? (
                           availableArtists.map((artist) => (
                             <div key={artist.id} className="p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
                               <div className="flex items-start justify-between">
@@ -412,6 +503,11 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* Blocked Dates Tab */}
+          <TabsContent value="blocked" className="space-y-6">
+            <BlockedDatesManager onBlockedDatesChange={handleBlockedDatesChange} />
           </TabsContent>
 
           {/* Artists Tab */}
