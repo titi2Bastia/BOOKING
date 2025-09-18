@@ -119,15 +119,18 @@ backend:
 
   - task: "Invitation Token Generation"
     implemented: true
-    working: "unknown"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Need to test invitation creation and token generation"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED: Invitation system fully tested. Retrieved token 7WM3iQPlA2YlGAjAdt3dEs-DEWyq3LN0lPCi_6UqMTQ for artiste.test+1@easybookevent.com. Fixed critical timezone bug in verification endpoint. All token scenarios tested successfully. Complete URL: https://avail-dj.preview.emergentagent.com/invite/{token}. Error message for invalid tokens: 'Token d'invitation invalide ou expiré'"
 
   - task: "Admin Access Verification"
     implemented: true
