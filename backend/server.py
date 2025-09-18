@@ -133,10 +133,34 @@ class Invitation(BaseModel):
 class InvitationCreate(BaseModel):
     email: EmailStr
 
+class BlockedDate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    date: date  # YYYY-MM-DD format
+    note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    @validator('date')
+    def validate_date_not_past(cls, v):
+        today = date.today()
+        if v < today:
+            raise ValueError('Impossible de bloquer une date passée')
+        return v
+
+class BlockedDateCreate(BaseModel):
+    date: date
+    note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
+    
+    @validator('date')
+    def validate_date_not_past(cls, v):
+        today = date.today()
+        if v < today:
+            raise ValueError('Impossible de bloquer une date passée')
+        return v
+
 class AvailabilityDay(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     artist_id: str
-    date: date
+    date: date  # YYYY-MM-DD format, no time
     note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
     color: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
