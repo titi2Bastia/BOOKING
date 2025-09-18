@@ -451,10 +451,13 @@ class ArtistCalendarAPITester:
         
         # Test artist operations
         self.test_artist_profile_operations()
-        self.test_availability_operations()
+        self.test_availability_day_operations()
+        self.test_availability_day_validation()
         
         # Test admin operations
         self.test_admin_operations()
+        self.test_availability_day_admin_view()
+        self.test_csv_export()
         
         # Test security
         self.test_security_permissions()
