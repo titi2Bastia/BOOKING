@@ -621,7 +621,89 @@ async def get_artist_profile(artist_id: str, current_user: User = Depends(get_cu
     profile.pop('_id', None)
     return ArtistProfile(**profile)
 
-# Availability Day endpoints (unchanged from previous version)
+# Blocked Dates endpoints (Admin only)
+@api_router.post("/blocked-dates", response_model=BlockedDate)
+async def create_blocked_date(blocked_data: BlockedDateCreate, current_user: User = Depends(get_current_admin)):
+    # Check if date is already blocked
+    existing = await db.blocked_dates.find_one({"date": blocked_data.date.isoformat()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Cette date est déjà bloquée")
+    
+    # Create blocked date
+    blocked_date_dict = {
+        "id": str(uuid.uuid4()),
+        "date": blocked_data.date.isoformat(),
+        "note": blocked_data.note or "",
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.blocked_dates.insert_one(blocked_date_dict)
+    
+    # Remove existing artist availabilities for this date
+    result = await db.availability_days.delete_many({"date": blocked_data.date.isoformat()})
+    if result.deleted_count > 0:
+        print(f"Removed {result.deleted_count} artist availabilities for blocked date {blocked_data.date}")
+    
+    blocked_date_dict.pop('_id', None)
+    return BlockedDate(**blocked_date_dict)
+
+@api_router.get("/blocked-dates", response_model=List[Dict[str, Any]])
+async def get_blocked_dates(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    query = {}
+    
+    if start_date:
+        query["date"] = {"$gte": start_date}
+    if end_date:
+        if "date" in query:
+            query["date"]["$lte"] = end_date
+        else:
+            query["date"] = {"$lte": end_date}
+    
+    blocked_dates = await db.blocked_dates.find(query).to_list(1000)
+    result = []
+    for blocked in blocked_dates:
+        blocked.pop('_id', None)
+        result.append(blocked)
+    
+    return result
+
+@api_router.put("/blocked-dates/{blocked_id}", response_model=BlockedDate)
+async def update_blocked_date(blocked_id: str, blocked_data: BlockedDateCreate, current_user: User = Depends(get_current_admin)):
+    blocked_date = await db.blocked_dates.find_one({"id": blocked_id})
+    if not blocked_date:
+        raise HTTPException(status_code=404, detail="Date bloquée non trouvée")
+    
+    # Update blocked date
+    update_data = {
+        "date": blocked_data.date.isoformat(),
+        "note": blocked_data.note or ""
+    }
+    
+    await db.blocked_dates.update_one(
+        {"id": blocked_id},
+        {"$set": update_data}
+    )
+    
+    updated_blocked = await db.blocked_dates.find_one({"id": blocked_id})
+    updated_blocked.pop('_id', None)
+    return BlockedDate(**updated_blocked)
+
+@api_router.delete("/blocked-dates/{blocked_id}")
+async def delete_blocked_date(blocked_id: str, current_user: User = Depends(get_current_admin)):
+    blocked_date = await db.blocked_dates.find_one({"id": blocked_id})
+    if not blocked_date:
+        raise HTTPException(status_code=404, detail="Date bloquée non trouvée")
+    
+    await db.blocked_dates.delete_one({"id": blocked_id})
+    return {"message": "Date bloquée supprimée"}
+
+# Utility function to check if a date is blocked
+async def is_date_blocked(date_str: str) -> bool:
+    blocked = await db.blocked_dates.find_one({"date": date_str})
+    return blocked is not None
 @api_router.post("/availability-days/toggle", response_model=Dict[str, Any])
 async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.ARTIST:
