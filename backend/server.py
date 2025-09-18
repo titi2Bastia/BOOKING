@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Cookie, Header
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, Cookie, Header, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr, validator
 from typing import List, Optional, Dict, Any
@@ -15,10 +16,16 @@ import logging
 from enum import Enum
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import aiofiles
+import shutil
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Create uploads directory
+UPLOADS_DIR = ROOT_DIR / "uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -26,8 +33,11 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # FastAPI setup
-app = FastAPI(title="Calendrier Disponibilités Artistes - Journées Entières")
+app = FastAPI(title="EasyBookEvent - Calendrier Artistes")
 api_router = APIRouter(prefix="/api")
+
+# Serve uploaded files
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,6 +50,12 @@ DEFAULT_TZ = "Europe/Paris"
 MIN_MONTHS_AHEAD = 12
 MAX_MONTHS_AHEAD = 18
 NOTES_MAX_LEN = 280
+BIO_MAX_LEN = 500
+
+# File upload configuration
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+MAX_GALLERY_IMAGES = 5
 
 # CORS
 app.add_middleware(
@@ -82,15 +98,29 @@ class UserLogin(BaseModel):
 class ArtistProfile(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
-    nom_de_scene: str
+    nom_de_scene: str  # Required
     telephone: Optional[str] = None
     lien: Optional[str] = None
+    tarif_soiree: Optional[str] = None  # "500 € / set" or similar
+    logo_url: Optional[str] = None  # Path to uploaded logo
+    gallery_urls: List[str] = Field(default_factory=list)  # List of gallery image paths
+    bio: Optional[str] = Field(None, max_length=BIO_MAX_LEN)  # Short bio, max 500 chars
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ArtistProfileCreate(BaseModel):
     nom_de_scene: str
     telephone: Optional[str] = None
     lien: Optional[str] = None
+    tarif_soiree: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=BIO_MAX_LEN)
+
+class ArtistProfileUpdate(BaseModel):
+    nom_de_scene: Optional[str] = None
+    telephone: Optional[str] = None
+    lien: Optional[str] = None
+    tarif_soiree: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=BIO_MAX_LEN)
 
 class Invitation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -106,7 +136,7 @@ class InvitationCreate(BaseModel):
 class AvailabilityDay(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     artist_id: str
-    date: date  # YYYY-MM-DD format, no time
+    date: date
     note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
     color: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -127,18 +157,6 @@ class AvailabilityDayCreate(BaseModel):
     date: date
     note: Optional[str] = Field(None, max_length=NOTES_MAX_LEN)
     color: Optional[str] = None
-    
-    @validator('date')
-    def validate_date_not_past(cls, v):
-        today = date.today()
-        if v < today:
-            raise ValueError('Impossible de créer une disponibilité sur une date passée')
-        
-        max_date = today + timedelta(days=MAX_MONTHS_AHEAD * 30)
-        if v > max_date:
-            raise ValueError(f'Disponibilité trop lointaine (maximum {MAX_MONTHS_AHEAD} mois)')
-        
-        return v
 
 class AvailabilityDayToggle(BaseModel):
     date: date
@@ -162,6 +180,56 @@ class ArtistWithProfile(BaseModel):
     nom_de_scene: str
     telephone: Optional[str] = None
     lien: Optional[str] = None
+    tarif_soiree: Optional[str] = None
+    logo_url: Optional[str] = None
+    gallery_urls: List[str] = Field(default_factory=list)
+    bio: Optional[str] = None
+    availability_count: int = 0
+
+# File upload utilities
+async def save_uploaded_file(file: UploadFile, subfolder: str = "") -> str:
+    """Save uploaded file and return the relative path"""
+    # Validate file extension
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Type de fichier non autorisé. Utilisez : {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Generate unique filename
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    
+    # Create subfolder if specified
+    save_dir = UPLOADS_DIR
+    if subfolder:
+        save_dir = save_dir / subfolder
+        save_dir.mkdir(exist_ok=True)
+    
+    file_path = save_dir / unique_filename
+    
+    # Save file
+    async with aiofiles.open(file_path, 'wb') as f:
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fichier trop volumineux. Maximum {MAX_FILE_SIZE // (1024*1024)}MB"
+            )
+        await f.write(content)
+    
+    # Return relative path for URL
+    relative_path = f"uploads/{subfolder}/{unique_filename}" if subfolder else f"uploads/{unique_filename}"
+    return relative_path
+
+def remove_file(file_path: str):
+    """Remove file from filesystem"""
+    try:
+        full_path = ROOT_DIR / file_path
+        if full_path.exists():
+            full_path.unlink()
+    except Exception as e:
+        print(f"Error removing file {file_path}: {e}")
 
 # Password utilities
 def verify_password(plain_password, hashed_password):
@@ -242,17 +310,41 @@ def send_invitation_email(email: str, token: str):
         message = Mail(
             from_email=os.environ.get('SENDER_EMAIL', 'no-reply@easybookevent.app'),
             to_emails=email,
-            subject="Invitation - Calendrier des Disponibilités",
+            subject="Invitation - EasyBookEvent",
             html_content=f"""
             <html>
-                <body>
-                    <h2>Vous êtes invité(e) à rejoindre le calendrier des disponibilités</h2>
-                    <p>Cliquez sur le lien ci-dessous pour créer votre compte :</p>
-                    <a href="{invitation_link}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                        Créer mon compte
-                    </a>
-                    <p>Ce lien expire dans 7 jours.</p>
-                    <p><strong>Note :</strong> Vous pourrez indiquer vos disponibilités par journées entières jusqu'à {MIN_MONTHS_AHEAD} mois dans le futur.</p>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">EasyBookEvent</h1>
+                        <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Calendrier des disponibilités artistes</p>
+                    </div>
+                    <div style="padding: 30px; background: white;">
+                        <h2 style="color: #333; margin-bottom: 20px;">Vous êtes invité(e) à rejoindre EasyBookEvent</h2>
+                        <p style="color: #666; line-height: 1.6;">
+                            Vous avez été invité(e) à créer votre profil artiste et à gérer vos disponibilités 
+                            sur notre plateforme. Vous pourrez :
+                        </p>
+                        <ul style="color: #666; line-height: 1.8;">
+                            <li>Créer votre profil complet (nom, tarifs, photos, bio)</li>
+                            <li>Indiquer vos disponibilités par journées entières</li>
+                            <li>Gérer votre calendrier jusqu'à 18 mois à l'avance</li>
+                        </ul>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{invitation_link}" 
+                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                      color: white; 
+                                      padding: 15px 30px; 
+                                      text-decoration: none; 
+                                      border-radius: 8px; 
+                                      font-weight: bold;
+                                      display: inline-block;">
+                                Créer mon profil artiste
+                            </a>
+                        </div>
+                        <p style="color: #888; font-size: 14px; text-align: center;">
+                            Ce lien expire dans 7 jours.
+                        </p>
+                    </div>
                 </body>
             </html>
             """
@@ -347,16 +439,21 @@ async def create_or_update_profile(profile_data: ArtistProfileCreate, current_us
     
     if existing_profile:
         # Update existing profile
+        update_data = profile_data.dict()
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        
         await db.artist_profiles.update_one(
             {"user_id": current_user.id},
-            {"$set": profile_data.dict()}
+            {"$set": update_data}
         )
         updated_profile = await db.artist_profiles.find_one({"user_id": current_user.id})
+        updated_profile.pop('_id', None)
         return ArtistProfile(**updated_profile)
     else:
         # Create new profile
         profile = ArtistProfile(user_id=current_user.id, **profile_data.dict())
-        await db.artist_profiles.insert_one(profile.dict())
+        profile_dict = profile.dict()
+        await db.artist_profiles.insert_one(profile_dict)
         return profile
 
 @api_router.get("/profile", response_model=ArtistProfile)
@@ -368,7 +465,90 @@ async def get_my_profile(current_user: User = Depends(get_current_user)):
     if not profile:
         raise HTTPException(status_code=404, detail="Profil non trouvé")
     
+    profile.pop('_id', None)
     return ArtistProfile(**profile)
+
+# File upload endpoints
+@api_router.post("/profile/upload-logo")
+async def upload_logo(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ARTIST:
+        raise HTTPException(status_code=403, detail="Seuls les artistes peuvent uploader des fichiers")
+    
+    # Get current profile
+    profile = await db.artist_profiles.find_one({"user_id": current_user.id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil non trouvé")
+    
+    # Remove old logo if exists
+    if profile.get('logo_url'):
+        remove_file(profile['logo_url'])
+    
+    # Save new logo
+    logo_url = await save_uploaded_file(file, "logos")
+    
+    # Update profile
+    await db.artist_profiles.update_one(
+        {"user_id": current_user.id},
+        {"$set": {"logo_url": logo_url, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"logo_url": logo_url, "message": "Logo uploadé avec succès"}
+
+@api_router.post("/profile/upload-gallery")
+async def upload_gallery_image(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ARTIST:
+        raise HTTPException(status_code=403, detail="Seuls les artistes peuvent uploader des fichiers")
+    
+    # Get current profile
+    profile = await db.artist_profiles.find_one({"user_id": current_user.id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil non trouvé")
+    
+    # Check gallery limit
+    current_gallery = profile.get('gallery_urls', [])
+    if len(current_gallery) >= MAX_GALLERY_IMAGES:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Maximum {MAX_GALLERY_IMAGES} images autorisées dans la galerie"
+        )
+    
+    # Save new image
+    image_url = await save_uploaded_file(file, "gallery")
+    
+    # Update profile
+    new_gallery = current_gallery + [image_url]
+    await db.artist_profiles.update_one(
+        {"user_id": current_user.id},
+        {"$set": {"gallery_urls": new_gallery, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"image_url": image_url, "message": "Image ajoutée à la galerie"}
+
+@api_router.delete("/profile/remove-gallery/{image_index}")
+async def remove_gallery_image(image_index: int, current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ARTIST:
+        raise HTTPException(status_code=403, detail="Seuls les artistes peuvent modifier leur galerie")
+    
+    # Get current profile
+    profile = await db.artist_profiles.find_one({"user_id": current_user.id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil non trouvé")
+    
+    current_gallery = profile.get('gallery_urls', [])
+    if image_index < 0 or image_index >= len(current_gallery):
+        raise HTTPException(status_code=400, detail="Index d'image invalide")
+    
+    # Remove file and update gallery
+    image_to_remove = current_gallery[image_index]
+    remove_file(image_to_remove)
+    
+    new_gallery = current_gallery[:image_index] + current_gallery[image_index + 1:]
+    await db.artist_profiles.update_one(
+        {"user_id": current_user.id},
+        {"$set": {"gallery_urls": new_gallery, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Image supprimée de la galerie"}
 
 # Artists management (Admin only)
 @api_router.get("/artists", response_model=List[ArtistWithProfile])
@@ -379,17 +559,45 @@ async def get_all_artists(current_user: User = Depends(get_current_admin)):
     result = []
     for artist in artists:
         profile = await db.artist_profiles.find_one({"user_id": artist['id']})
-        result.append(ArtistWithProfile(
-            id=artist['id'],
-            email=artist['email'],
-            nom_de_scene=profile.get('nom_de_scene', '') if profile else '',
-            telephone=profile.get('telephone') if profile else None,
-            lien=profile.get('lien') if profile else None
-        ))
+        
+        # Count availability days
+        availability_count = await db.availability_days.count_documents({"artist_id": artist['id']})
+        
+        if profile:
+            profile.pop('_id', None)
+            result.append(ArtistWithProfile(
+                id=artist['id'],
+                email=artist['email'],
+                nom_de_scene=profile.get('nom_de_scene', ''),
+                telephone=profile.get('telephone'),
+                lien=profile.get('lien'),
+                tarif_soiree=profile.get('tarif_soiree'),
+                logo_url=profile.get('logo_url'),
+                gallery_urls=profile.get('gallery_urls', []),
+                bio=profile.get('bio'),
+                availability_count=availability_count
+            ))
+        else:
+            result.append(ArtistWithProfile(
+                id=artist['id'],
+                email=artist['email'],
+                nom_de_scene='',
+                availability_count=availability_count
+            ))
     
     return result
 
-# Availability Day endpoints
+@api_router.get("/artists/{artist_id}/profile", response_model=ArtistProfile)
+async def get_artist_profile(artist_id: str, current_user: User = Depends(get_current_admin)):
+    """Get detailed artist profile (admin only)"""
+    profile = await db.artist_profiles.find_one({"user_id": artist_id})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil artiste non trouvé")
+    
+    profile.pop('_id', None)
+    return ArtistProfile(**profile)
+
+# Availability Day endpoints (unchanged from previous version)
 @api_router.post("/availability-days/toggle", response_model=Dict[str, Any])
 async def toggle_availability_day(day_data: AvailabilityDayToggle, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.ARTIST:
@@ -504,13 +712,19 @@ async def get_artists_available_on_date(day_date: str, current_user: User = Depe
         profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
         user = await db.users.find_one({"id": day['artist_id']})
         
-        if user:
+        if user and profile:
+            profile.pop('_id', None)
             available_artists.append(ArtistWithProfile(
                 id=user['id'],
                 email=user['email'],
-                nom_de_scene=profile.get('nom_de_scene', '') if profile else '',
-                telephone=profile.get('telephone') if profile else None,
-                lien=profile.get('lien') if profile else None
+                nom_de_scene=profile.get('nom_de_scene', ''),
+                telephone=profile.get('telephone'),
+                lien=profile.get('lien'),
+                tarif_soiree=profile.get('tarif_soiree'),
+                logo_url=profile.get('logo_url'),
+                gallery_urls=profile.get('gallery_urls', []),
+                bio=profile.get('bio'),
+                availability_count=0  # Not needed in this context
             ))
     
     return available_artists
@@ -568,7 +782,7 @@ async def export_csv(
     # Create CSV content
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Date", "Nom Artiste", "Email", "Note"])
+    writer.writerow(["Date", "Nom Artiste", "Email", "Tarif Soirée", "Note"])
     
     for day in availability_days:
         profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
@@ -576,11 +790,13 @@ async def export_csv(
         
         artist_name = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
         artist_email = user.get('email') if user else ''
+        tarif_soiree = profile.get('tarif_soiree', '') if profile else ''
         
         writer.writerow([
             day['date'],
             artist_name,
             artist_email,
+            tarif_soiree,
             day.get('note', '')
         ])
     
