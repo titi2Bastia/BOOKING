@@ -869,7 +869,7 @@ async def export_csv(
     artist_ids: Optional[str] = None,
     current_user: User = Depends(get_current_admin)
 ):
-    """Export availability days to CSV format"""
+    """Export availability days and blocked dates to CSV format"""
     import csv
     from io import StringIO
     
@@ -883,17 +883,18 @@ async def export_csv(
         else:
             query["date"] = {"$lte": end_date}
     
-    if artist_ids:
-        artist_id_list = artist_ids.split(",")
-        query["artist_id"] = {"$in": artist_id_list}
-    
+    # Get availability days
     availability_days = await db.availability_days.find(query).to_list(1000)
+    
+    # Get blocked dates
+    blocked_dates = await db.blocked_dates.find(query).to_list(1000)
     
     # Create CSV content
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Date", "Nom Artiste", "Email", "Tarif Soirée", "Note"])
+    writer.writerow(["Date", "Type", "Nom Artiste", "Email", "Tarif Soirée", "Note"])
     
+    # Add availability days
     for day in availability_days:
         profile = await db.artist_profiles.find_one({"user_id": day['artist_id']})
         user = await db.users.find_one({"id": day['artist_id']})
@@ -904,16 +905,28 @@ async def export_csv(
         
         writer.writerow([
             day['date'],
+            'Disponibilité',
             artist_name,
             artist_email,
             tarif_soiree,
             day.get('note', '')
         ])
     
+    # Add blocked dates
+    for blocked in blocked_dates:
+        writer.writerow([
+            blocked['date'],
+            'Date bloquée',
+            'Administration',
+            'admin@easybookevent.app',
+            '',
+            blocked.get('note', '')
+        ])
+    
     csv_content = output.getvalue()
     output.close()
     
-    return {"csv_content": csv_content, "filename": f"disponibilites_{datetime.now().strftime('%Y%m%d')}.csv"}
+    return {"csv_content": csv_content, "filename": f"disponibilites_et_blocages_{datetime.now().strftime('%Y%m%d')}.csv"}
 
 # Include router
 app.include_router(api_router)
