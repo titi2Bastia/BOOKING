@@ -25,30 +25,32 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-100 via-white to-purple-100">
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center fade-in">
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-3 rounded-full">
-              <Calendar className="h-8 w-8 text-white" />
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-xl shadow-lg">
+              <Calendar className="h-10 w-10 text-white" />
             </div>
-            <Music className="h-6 w-6 text-indigo-600 ml-2" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Calendrier Artistes
+          <h1 className="text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            EasyBookEvent
           </h1>
-          <p className="text-gray-600">
-            Gérez vos disponibilités en toute simplicité
+          <p className="text-gray-600 text-lg">
+            Calendrier des disponibilités artistes
           </p>
         </div>
 
         {/* Login Form */}
-        <Card className="glass card-hover fade-in">
-          <CardHeader className="text-center">
+        <Card className="glass card-hover fade-in shadow-xl border-0">
+          <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl font-semibold text-gray-900">
               Connexion
             </CardTitle>
+            <p className="text-gray-600 text-sm mt-2">
+              Accédez à votre espace personnel
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,7 +66,7 @@ const LoginPage = ({ onLogin }) => {
                     placeholder="votre@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="form-input pl-10"
+                    className="form-input pl-10 h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
                     required
                   />
                 </div>
@@ -82,7 +84,7 @@ const LoginPage = ({ onLogin }) => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="form-input pl-10"
+                    className="form-input pl-10 h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
                     required
                   />
                 </div>
@@ -90,45 +92,42 @@ const LoginPage = ({ onLogin }) => {
 
               <Button
                 type="submit"
-                className="w-full btn-primary"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 h-12 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105"
                 disabled={loading || !email || !password}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="spinner h-5 w-5 mr-2"></div>
-                    Connexion...
+                    Connexion en cours...
                   </div>
                 ) : (
                   'Se connecter'
                 )}
               </Button>
             </form>
-          </CardContent>
-        </Card>
 
-        {/* Demo accounts info */}
-        <Card className="glass fade-in">
-          <CardContent className="pt-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Comptes de démonstration :</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
-                <span className="text-blue-900">Admin :</span>
-                <span className="font-mono text-blue-700">admin@demo.app</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                <span className="text-green-900">DJ Alex :</span>
-                <span className="font-mono text-green-700">dj.alex@demo.app</span>
-              </div>
-              <div className="flex justify-between items-center p-2 bg-purple-50 rounded">
-                <span className="text-purple-900">Marie Beats :</span>
-                <span className="font-mono text-purple-700">marie.beats@demo.app</span>
-              </div>
-              <p className="text-gray-500 text-xs mt-2">
-                Mot de passe pour tous : <span className="font-mono">demo123</span>
+            {/* Registration Info */}
+            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+              <p className="text-sm text-gray-600 mb-3">
+                Vous n'avez pas de compte ?
               </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-center mb-2">
+                  <Mail className="h-5 w-5 text-blue-600 mr-2" />
+                  <span className="text-blue-800 font-medium">Inscription sur invitation uniquement</span>
+                </div>
+                <p className="text-blue-700 text-sm">
+                  Vous devez recevoir un lien d'invitation de l'administrateur pour créer votre compte artiste.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center text-gray-500 text-sm fade-in">
+          <p>© 2024 EasyBookEvent - Gestion professionnelle des artistes</p>
+        </div>
       </div>
     </div>
   );
