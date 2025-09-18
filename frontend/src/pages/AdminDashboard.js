@@ -76,26 +76,17 @@ const AdminDashboard = ({ user, onLogout }) => {
       setAvailabilities(response.data);
       
       // Convert to calendar events with artist info
-      const calendarEvents = [];
-      
-      for (const avail of response.data) {
-        // Find artist info
-        const artist = artists.find(a => a.id === avail.artist_id);
-        const artistName = artist?.nom_de_scene || 'Artiste inconnu';
-        
-        calendarEvents.push({
-          id: avail.id,
-          title: `Disponible — ${artistName}`,
-          start: new Date(avail.start_datetime),
-          end: new Date(avail.end_datetime),
-          resource: {
-            ...avail,
-            artist_name: artistName,
-            artist: artist
-          },
-          allDay: avail.type === 'journée_entière'
-        });
-      }
+      const calendarEvents = response.data.map(avail => ({
+        id: avail.id,
+        title: `Disponible — ${avail.artist_name || 'Artiste inconnu'}`,
+        start: new Date(avail.start_datetime),
+        end: new Date(avail.end_datetime),
+        resource: {
+          ...avail,
+          artist_name: avail.artist_name || 'Artiste inconnu'
+        },
+        allDay: avail.type === 'journée_entière'
+      }));
       
       setEvents(calendarEvents);
     } catch (error) {
