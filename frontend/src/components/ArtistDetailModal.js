@@ -70,10 +70,10 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
                     <div className="flex-shrink-0">
                       {profile.logo_url ? (
                         <img
-                          src={`${BACKEND_URL}/${profile.logo_url}`}
+                          src={profile.logo_url}
                           alt={`Logo ${profile.nom_de_scene}`}
                           className="w-24 h-24 object-cover rounded-lg border shadow-md cursor-pointer hover:opacity-75 transition-opacity"
-                          onClick={() => setSelectedImage(`${BACKEND_URL}/${profile.logo_url}`)}
+                          onClick={() => setSelectedImage(profile.logo_url)}
                         />
                       ) : (
                         <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
