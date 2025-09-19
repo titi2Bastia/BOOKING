@@ -638,6 +638,33 @@ async def get_artist_profile(artist_id: str, current_user: User = Depends(get_cu
     profile.pop('_id', None)
     return ArtistProfile(**profile)
 
+@api_router.delete("/artists/{artist_id}")
+async def delete_artist(artist_id: str, current_user: User = Depends(get_current_admin)):
+    """Delete artist and all related data (admin only)"""
+    # Check if artist exists
+    artist = await db.users.find_one({"id": artist_id, "role": UserRole.ARTIST})
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artiste non trouvé")
+    
+    # Delete all artist's availability days
+    availability_result = await db.availability_days.delete_many({"artist_id": artist_id})
+    
+    # Delete artist profile
+    profile_result = await db.artist_profiles.delete_one({"user_id": artist_id})
+    
+    # Delete the user account
+    user_result = await db.users.delete_one({"id": artist_id})
+    
+    # Optionally delete related invitations (sent to this email)
+    await db.invitations.delete_many({"email": artist['email']})
+    
+    return {
+        "message": "Artiste supprimé avec succès",
+        "deleted_availabilities": availability_result.deleted_count,
+        "deleted_profile": profile_result.deleted_count > 0,
+        "deleted_user": user_result.deleted_count > 0
+    }
+
 # Blocked Dates endpoints (Admin only)
 @api_router.post("/blocked-dates", response_model=BlockedDate)
 async def create_blocked_date(blocked_data: BlockedDateCreate, current_user: User = Depends(get_current_admin)):
