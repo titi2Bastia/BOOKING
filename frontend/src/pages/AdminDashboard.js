@@ -495,6 +495,8 @@ const AdminDashboard = ({ user, onLogout }) => {
                         selectable
                         views={['month']}
                         view="month"
+                        date={currentDate}
+                        onNavigate={handleNavigate}
                         eventPropGetter={eventStyleGetter}
                         messages={{
                           next: 'Suivant',
