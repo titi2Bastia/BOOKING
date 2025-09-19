@@ -37,7 +37,24 @@ db = client[os.environ['DB_NAME']]
 app = FastAPI(title="EasyBookEvent - Calendrier Artistes")
 api_router = APIRouter(prefix="/api")
 
-# Serve uploaded files
+# Static files setup - serve uploads via API route to work with ingress
+@api_router.get("/uploads/{file_path:path}")
+async def serve_uploaded_file(file_path: str):
+    """Serve uploaded files via API route"""
+    full_path = UPLOADS_DIR / file_path
+    if not full_path.exists():
+        raise HTTPException(status_code=404, detail="Fichier non trouvé")
+    
+    # Determine media type
+    media_type = "image/jpeg"
+    if file_path.lower().endswith('.png'):
+        media_type = "image/png"
+    elif file_path.lower().endswith('.jpg') or file_path.lower().endswith('.jpeg'):
+        media_type = "image/jpeg"
+    
+    return FileResponse(full_path, media_type=media_type)
+
+# Keep original static mount for direct backend access (development)
 app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Security
