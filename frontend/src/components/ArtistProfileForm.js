@@ -248,7 +248,7 @@ const ArtistProfileForm = ({ profile, onProfileUpdate }) => {
             {profile?.logo_url ? (
               <div className="flex items-center space-x-4">
                 <img
-                  src={profile.logo_url?.startsWith('http') ? profile.logo_url : `${BACKEND_URL}/${profile.logo_url}`}
+                  src={profile.logo_url}
                   alt="Logo"
                   className="w-20 h-20 object-cover rounded-lg border"
                 />
