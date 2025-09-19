@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Verify and test admin access and invitation system for private artist availability calendar. Create production admin account, generate test invitation, document exact URLs and error messages, provide visual proof of functionality."
+user_problem_statement: "Test photo upload functionality for artists in the EasyBookEvent application. Verify logo upload, gallery upload, image display, and error handling scenarios."
 
 backend:
   - task: "Admin Account Creation (Production)"
