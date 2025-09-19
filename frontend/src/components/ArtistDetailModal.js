@@ -172,10 +172,10 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
                       {profile.gallery_urls.map((imageUrl, index) => (
                         <img
                           key={index}
-                          src={`${BACKEND_URL}/${imageUrl}`}
+                          src={imageUrl}
                           alt={`Galerie ${profile.nom_de_scene} ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border shadow-sm cursor-pointer hover:opacity-75 transition-opacity"
-                          onClick={() => setSelectedImage(`${BACKEND_URL}/${imageUrl}`)}
+                          onClick={() => setSelectedImage(imageUrl)}
                         />
                       ))}
                     </div>
