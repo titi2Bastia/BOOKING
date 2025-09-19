@@ -244,6 +244,14 @@ const AdminDashboard = ({ user, onLogout }) => {
     setCurrentDate(newDate);
   };
 
+  const handleSelectEvent = (event) => {
+    // Only handle clicks on availability events (not blocked dates)
+    if (event.resource?.type === 'availability' && event.resource?.artist_id) {
+      setSelectedArtistId(event.resource.artist_id);
+      setShowArtistDetail(true);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       'envoyée': 'bg-yellow-100 text-yellow-800',
