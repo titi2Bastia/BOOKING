@@ -180,7 +180,7 @@ const ArtistProfileForm = ({ profile, onProfileUpdate }) => {
                 id="tarif_soiree"
                 value={formData.tarif_soiree}
                 onChange={(e) => handleInputChange('tarif_soiree', e.target.value)}
-                placeholder="Ex: 500 € / set, À négocier..."
+                placeholder="€"
                 className="pl-10"
               />
             </div>
