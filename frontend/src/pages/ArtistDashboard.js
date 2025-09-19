@@ -238,6 +238,22 @@ const ArtistDashboard = ({ user, onLogout }) => {
   };
 
   const dayPropGetter = (date) => {
+    const dateStr = moment(date).format('YYYY-MM-DD');
+    
+    // Check if date is blocked by admin
+    const isBlocked = blockedDates.some(blocked => blocked.date === dateStr);
+    if (isBlocked) {
+      return {
+        className: 'blocked-date',
+        style: {
+          backgroundColor: '#dc2626',
+          color: '#ffffff',
+          cursor: 'not-allowed',
+          opacity: 0.7
+        }
+      };
+    }
+    
     if (isDateInPast(date)) {
       return {
         className: 'past-date',
