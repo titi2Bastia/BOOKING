@@ -22,6 +22,7 @@ const localizer = momentLocalizer(moment);
 const ArtistDashboard = ({ user, onLogout }) => {
   const [profile, setProfile] = useState(null);
   const [availabilityDays, setAvailabilityDays] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
