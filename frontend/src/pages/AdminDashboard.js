@@ -346,6 +346,60 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </DialogContent>
               </Dialog>
 
+              {/* Modal pour afficher le lien d'invitation */}
+              <Dialog open={showInvitationLink} onOpenChange={setShowInvitationLink}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center">
+                      <Mail className="h-5 w-5 mr-2 text-green-600" />
+                      Invitation créée avec succès !
+                    </DialogTitle>
+                  </DialogHeader>
+                  {invitationLink && (
+                    <div className="space-y-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p className="text-sm text-green-800 mb-2">
+                          <strong>Email destinataire :</strong> {invitationLink.email}
+                        </p>
+                        <p className="text-sm text-green-800 mb-3">
+                          Copiez ce lien et envoyez-le à l'artiste par email, SMS ou chat :
+                        </p>
+                        
+                        <div className="bg-white border border-green-300 rounded p-3 break-all text-sm font-mono">
+                          {invitationLink.link}
+                        </div>
+                        
+                        <div className="flex space-x-2 mt-3">
+                          <Button
+                            onClick={() => copyToClipboard(invitationLink.link)}
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copier le lien
+                          </Button>
+                          <Button
+                            onClick={() => window.open(invitationLink.link, '_blank')}
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Tester le lien
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-xs text-blue-800">
+                          💡 <strong>Conseil :</strong> Ce lien expire dans 7 jours. L'artiste pourra créer son compte et gérer ses disponibilités en journées entières.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
               <Button
                 onClick={onLogout}
                 variant="outline"
