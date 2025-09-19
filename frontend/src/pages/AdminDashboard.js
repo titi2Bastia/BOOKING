@@ -56,6 +56,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [showArtistDetail, setShowArtistDetail] = useState(false);
   const [invitationLink, setInvitationLink] = useState(null);
   const [showInvitationLink, setShowInvitationLink] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
     loadData();
