@@ -69,21 +69,57 @@ const ArtistDashboard = ({ user, onLogout }) => {
       const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
       setAvailabilityDays(response.data);
       
-      // Convert to calendar events (all-day events)
-      const calendarEvents = response.data.map(day => ({
+      updateCalendarEvents(response.data, blockedDates);
+    } catch (error) {
+      console.error('Error loading availability days:', error);
+      toast.error('Erreur lors du chargement des disponibilités');
+    }
+  };
+
+  const loadBlockedDates = async () => {
+    try {
+      // Load blocked dates for the same period
+      const startDate = moment().startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
+      
+      const response = await axios.get(`/blocked-dates?start_date=${startDate}&end_date=${endDate}`);
+      setBlockedDates(response.data);
+      
+      updateCalendarEvents(availabilityDays, response.data);
+    } catch (error) {
+      console.error('Error loading blocked dates:', error);
+      // Don't show error toast for blocked dates as it's not critical
+    }
+  };
+
+  const updateCalendarEvents = (availabilities, blocked) => {
+    const calendarEvents = [];
+    
+    // Add availability events
+    availabilities.forEach(day => {
+      calendarEvents.push({
         id: day.id,
         title: day.note || 'Disponible',
         start: new Date(`${day.date}T00:00:00`),
         end: new Date(`${day.date}T23:59:59`),
         allDay: true,
-        resource: day
-      }));
-      
-      setEvents(calendarEvents);
-    } catch (error) {
-      console.error('Error loading availability days:', error);
-      toast.error('Erreur lors du chargement des disponibilités');
-    }
+        resource: { ...day, type: 'availability' }
+      });
+    });
+    
+    // Add blocked date events (for visual display)
+    blocked.forEach(blockedDate => {
+      calendarEvents.push({
+        id: `blocked-${blockedDate.id}`,
+        title: `🚫 Bloqué par l'admin`,
+        start: new Date(`${blockedDate.date}T00:00:00`),
+        end: new Date(`${blockedDate.date}T23:59:59`),
+        allDay: true,
+        resource: { ...blockedDate, type: 'blocked' }
+      });
+    });
+    
+    setEvents(calendarEvents);
   };
 
   const handleProfileUpdate = (updatedProfile) => {
