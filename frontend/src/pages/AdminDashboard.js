@@ -161,9 +161,22 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const sendInvitation = async () => {
     try {
-      await axios.post('/invitations', { email: inviteEmail });
-      toast.success('Invitation envoyée avec succès');
+      const response = await axios.post('/invitations', { email: inviteEmail });
+      
+      // Get the invitation token from the response
+      const invitationToken = response.data.token;
+      const frontendUrl = process.env.REACT_APP_BACKEND_URL || 'https://avail-dj.preview.emergentagent.com';
+      const fullInvitationLink = `${frontendUrl}/invite/${invitationToken}`;
+      
+      setInvitationLink({
+        email: inviteEmail,
+        link: fullInvitationLink,
+        token: invitationToken
+      });
+      
+      toast.success('Invitation créée avec succès');
       setShowInviteDialog(false);
+      setShowInvitationLink(true);
       setInviteEmail('');
       loadInvitations();
     } catch (error) {
