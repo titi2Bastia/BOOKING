@@ -187,6 +187,31 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const deleteArtist = async (artistId, artistName) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'artiste "${artistName}" ?\n\nCela supprimera :\n- Son profil complet\n- Toutes ses disponibilités\n- Son compte utilisateur\n\nCette action est irréversible.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/artists/${artistId}`);
+      toast.success(`Artiste "${artistName}" supprimé avec succès`);
+      
+      // Show details of what was deleted
+      const { deleted_availabilities } = response.data;
+      if (deleted_availabilities > 0) {
+        toast.success(`${deleted_availabilities} disponibilité(s) supprimée(s)`);
+      }
+      
+      // Reload data
+      loadArtists();
+      loadAvailabilityDays();
+    } catch (error) {
+      console.error('Error deleting artist:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression de l\'artiste';
+      toast.error(message);
+    }
+  };
+
   const sendInvitation = async () => {
     try {
       const response = await axios.post('/invitations', { email: inviteEmail });
