@@ -321,7 +321,7 @@ const ArtistProfileForm = ({ profile, onProfileUpdate }) => {
                 {profile.gallery_urls.map((imageUrl, index) => (
                   <div key={index} className="relative group">
                     <img
-                      src={imageUrl?.startsWith('http') ? imageUrl : `${BACKEND_URL}/${imageUrl}`}
+                      src={imageUrl}
                       alt={`Galerie ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border"
                     />
