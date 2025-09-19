@@ -240,6 +240,10 @@ const AdminDashboard = ({ user, onLogout }) => {
     updateCalendarEvents(availabilityDays, newBlockedDates);
   };
 
+  const handleNavigate = (newDate) => {
+    setCurrentDate(newDate);
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       'envoyée': 'bg-yellow-100 text-yellow-800',
