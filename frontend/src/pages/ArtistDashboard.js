@@ -357,6 +357,7 @@ const ArtistDashboard = ({ user, onLogout }) => {
                   <div>
                     <h3 className="font-semibold text-blue-900 mb-2">Comment ça fonctionne</h3>
                     <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• <strong>IMPORTANT : Complétez d'abord votre profil (nom de scène obligatoire) et sauvegardez-le</strong></li>
                       <li>• <strong>Cliquez sur un jour</strong> pour basculer votre disponibilité (ON/OFF)</li>
                       <li>• <strong>Journées entières uniquement</strong> - pas de créneaux horaires</li>
                       <li>• <strong>Dates passées :</strong> grisées et non modifiables</li>
