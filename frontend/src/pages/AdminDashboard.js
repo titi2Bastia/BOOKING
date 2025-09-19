@@ -22,7 +22,10 @@ import {
   Eye,
   DollarSign,
   Image as ImageIcon,
-  Ban
+  Ban,
+  Copy,
+  Check,
+  ExternalLink
 } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
