@@ -211,17 +211,53 @@ frontend:
         agent: "testing"
         comment: "✅ WORKING: Admin dashboard fully functional. Clean interface with no demo data. All tabs working (Calendrier, Dates bloquées, Artistes, Invitations). Invitation creation shows proper error for existing emails. Calendar aggregates all artist availabilities. Export CSV functionality present."
 
-  - task: "Mobile Responsiveness"
+  - task: "Artist Photo Upload - Logo Upload"
     implemented: true
-    working: true
-    file: "frontend/src/App.js"
+    working: "NA"
+    file: "frontend/src/components/ArtistProfileForm.js"
     stuck_count: 0
-    priority: "medium"
-    needs_retesting: false
+    priority: "high"
+    needs_retesting: true
     status_history:
-      - working: true
+      - working: "NA"
         agent: "testing"
-        comment: "✅ WORKING: Mobile responsiveness confirmed. Login form works on mobile (390x844). Admin dashboard adapts to mobile screen. Tab navigation functional on mobile. Modern UI with proper responsive design using Tailwind CSS."
+        comment: "Need to test logo upload functionality - upload image, verify display, check URL formation with /api/uploads/ prefix"
+
+  - task: "Artist Photo Upload - Gallery Upload"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/ArtistProfileForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test gallery upload functionality - upload multiple images (up to 5), verify grid display, test image removal"
+
+  - task: "Artist Photo Upload - Error Handling"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/ArtistProfileForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test error scenarios - large files (>2MB), non-image files, gallery limit (>5 images), proper error messages"
+
+  - task: "Artist Photo Upload - Image Display"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/ArtistProfileForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Need to test image display - verify images load correctly, check URL formation, test image removal functionality"
 
 metadata:
   created_by: "main_agent"
