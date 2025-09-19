@@ -160,6 +160,13 @@ const ArtistDashboard = ({ user, onLogout }) => {
       return;
     }
 
+    // Check if date is blocked by admin
+    const isBlocked = blockedDates.some(blocked => blocked.date === clickedDate);
+    if (isBlocked) {
+      toast.error('Cette date est bloquée par l\'administrateur');
+      return;
+    }
+
     // Check if day is already available
     const existingDay = availabilityDays.find(day => day.date === clickedDate);
     
