@@ -666,7 +666,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                             <div className="flex items-center space-x-3">
                               {artist.logo_url ? (
                                 <img
-                                  src={`${BACKEND_URL}/${artist.logo_url}`}
+                                  src={artist.logo_url}
                                   alt={artist.nom_de_scene}
                                   className="w-12 h-12 object-cover rounded-lg border"
                                 />
