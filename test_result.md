@@ -213,51 +213,63 @@ frontend:
 
   - task: "Artist Photo Upload - Logo Upload"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/ArtistProfileForm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test logo upload functionality - upload image, verify display, check URL formation with /api/uploads/ prefix"
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED & WORKING: Logo upload functionality working perfectly. Fixed critical URL prefix issue in backend (missing leading slash). Logo uploads successfully with correct /api/uploads/logos/ URL format. Images display correctly and are accessible via proper URLs. File validation working (JPG/PNG only, 2MB max)."
 
   - task: "Artist Photo Upload - Gallery Upload"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/ArtistProfileForm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test gallery upload functionality - upload multiple images (up to 5), verify grid display, test image removal"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Gallery upload functionality working. Images upload successfully and display in grid format. Gallery counter shows correct count (X/5). New uploads have correct /api/uploads/gallery/ URL format after backend fix. Multiple image uploads supported up to 5 max limit."
 
   - task: "Artist Photo Upload - Error Handling"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/ArtistProfileForm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test error scenarios - large files (>2MB), non-image files, gallery limit (>5 images), proper error messages"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Error handling working correctly. Non-image files show proper error message 'Veuillez sélectionner une image (JPG, PNG)'. File size validation working (2MB limit). Frontend validation prevents invalid uploads before sending to backend."
 
   - task: "Artist Photo Upload - Image Display"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/ArtistProfileForm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Need to test image display - verify images load correctly, check URL formation, test image removal functionality"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Image display working correctly. Logo displays in profile with proper dimensions (80x80px). Gallery images display in responsive grid (2-3 columns). Images load correctly from /api/uploads/ URLs. Backend serves images via proper API routes with correct MIME types."
 
 metadata:
   created_by: "main_agent"
