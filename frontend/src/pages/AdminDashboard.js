@@ -728,7 +728,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                   <div className="space-y-3">
                     {invitations.map((invitation) => (
                       <div key={invitation.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{invitation.email}</p>
                           <p className="text-sm text-gray-600">
                             Créée le {moment(invitation.created_at).format('DD/MM/YYYY à HH:mm')}
@@ -737,8 +737,16 @@ const AdminDashboard = ({ user, onLogout }) => {
                             Expire le {moment(invitation.expires_at).format('DD/MM/YYYY à HH:mm')}
                           </p>
                         </div>
-                        <div>
+                        <div className="flex items-center space-x-2">
                           {getStatusBadge(invitation.status)}
+                          <Button
+                            onClick={() => deleteInvitation(invitation.id)}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
