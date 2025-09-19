@@ -50,6 +50,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [availableArtists, setAvailableArtists] = useState([]);
   const [selectedArtistId, setSelectedArtistId] = useState(null);
   const [showArtistDetail, setShowArtistDetail] = useState(false);
+  const [invitationLink, setInvitationLink] = useState(null);
+  const [showInvitationLink, setShowInvitationLink] = useState(false);
 
   useEffect(() => {
     loadData();
