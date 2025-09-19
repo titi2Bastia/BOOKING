@@ -104,9 +104,9 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const loadBlockedDates = async () => {
     try {
-      // Load blocked dates for current year and next year
-      const startDate = moment().startOf('year').format('YYYY-MM-DD');
-      const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
+      // Load blocked dates for extended period (2 years back and 3 years forward)
+      const startDate = moment().subtract(1, 'years').startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(3, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/blocked-dates?start_date=${startDate}&end_date=${endDate}`);
       setBlockedDates(response.data);
@@ -114,6 +114,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       updateCalendarEvents(availabilityDays, response.data);
     } catch (error) {
       console.error('Error loading blocked dates:', error);
+      toast.error('Erreur lors du chargement des dates bloquées');
     }
   };
 
