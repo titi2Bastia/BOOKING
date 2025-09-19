@@ -88,9 +88,9 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const loadAvailabilityDays = async () => {
     try {
-      // Load availability days for current year and next year
-      const startDate = moment().startOf('year').format('YYYY-MM-DD');
-      const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
+      // Load availability days for extended period (2 years back and 3 years forward)
+      const startDate = moment().subtract(1, 'years').startOf('year').format('YYYY-MM-DD');
+      const endDate = moment().add(3, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
       setAvailabilityDays(response.data);
