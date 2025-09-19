@@ -144,39 +144,84 @@ backend:
 frontend:
   - task: "Admin Login & Redirection"
     implemented: true
-    working: "unknown"
+    working: true
     file: "frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Need to test admin login redirects to /admin route"
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Admin login working perfectly. Fixed timezone bug in backend registration endpoint and recreated admin user with correct password hash. Admin successfully redirects to /admin dashboard with clean interface showing 0 artists, 0 availabilities. All tabs (Calendrier, Dates bloquées, Artistes, Invitations) working. Calendar navigation (previous/next month) functional. Mobile responsive design confirmed."
 
   - task: "Invitation Link Handling"
     implemented: true
-    working: "unknown"
+    working: true
     file: "frontend/src/pages/InvitePage.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Need to test invitation signup flow with valid and invalid tokens"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Valid invitation URL (7WM3iQPlA2YlGAjAdt3dEs-DEWyq3LN0lPCi_6UqMTQ) shows registration form correctly. Artist registration successful with proper validation. Invalid tokens show correct error message 'Invitation invalide'. Registration redirects to login page after success."
 
   - task: "Error Message Display"
     implemented: true
-    working: "unknown"
+    working: true
     file: "frontend/src/pages/InvitePage.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Need to verify exact error messages for invalid/expired tokens"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Error messages are clear and helpful. Invalid invitation shows 'Invitation invalide', existing email invitation shows proper error, invalid login shows 'Email ou mot de passe incorrect'. All French text is correct and professional."
+
+  - task: "Artist Dashboard Functionality"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ArtistDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Artist dashboard loads correctly after login. Calendar shows full-day availability system (journées entières uniquement). Profile management dialog opens. Past dates are properly disabled. RBAC working - artists cannot access /admin routes."
+
+  - task: "Admin Dashboard Functionality"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Admin dashboard fully functional. Clean interface with no demo data. All tabs working (Calendrier, Dates bloquées, Artistes, Invitations). Invitation creation shows proper error for existing emails. Calendar aggregates all artist availabilities. Export CSV functionality present."
+
+  - task: "Mobile Responsiveness"
+    implemented: true
+    working: true
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING: Mobile responsiveness confirmed. Login form works on mobile (390x844). Admin dashboard adapts to mobile screen. Tab navigation functional on mobile. Modern UI with proper responsive design using Tailwind CSS."
 
 metadata:
   created_by: "main_agent"
