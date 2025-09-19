@@ -391,8 +391,9 @@ const ArtistDashboard = ({ user, onLogout }) => {
                     views={['month']}
                     view="month"
                     date={currentDate}
-                    onNavigate={setCurrentDate}
+                    onNavigate={handleNavigate}
                     dayPropGetter={dayPropGetter}
+                    eventPropGetter={eventStyleGetter}
                     messages={{
                       next: 'Suivant',
                       previous: 'Précédent',
