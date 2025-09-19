@@ -385,7 +385,15 @@ def send_invitation_email(email: str, token: str):
 async def register(user_data: UserCreate, token: str):
     # Verify invitation token
     invitation = await db.invitations.find_one({"token": token, "status": InvitationStatus.SENT})
-    if not invitation or invitation['expires_at'] < datetime.now(timezone.utc):
+    if not invitation:
+        raise HTTPException(status_code=400, detail="Token d'invitation invalide ou expiré")
+    
+    # Handle timezone-aware datetime comparison
+    expires_at = invitation['expires_at']
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    
+    if expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Token d'invitation invalide ou expiré")
     
     # Check if user already exists
