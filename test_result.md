@@ -267,9 +267,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Account Creation (Production)"
-    - "Admin Access Verification"
-    - "Invitation Token Generation"
+    - "Artist Photo Upload - Logo Upload"
+    - "Artist Photo Upload - Gallery Upload"
+    - "Artist Photo Upload - Error Handling"
+    - "Artist Photo Upload - Image Display"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
