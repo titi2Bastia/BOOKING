@@ -162,6 +162,16 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Lien copié dans le presse-papiers !');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error('Erreur lors de la copie');
+    }
+  };
+
   const sendInvitation = async () => {
     try {
       const response = await axios.post('/invitations', { email: inviteEmail });
