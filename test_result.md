@@ -278,11 +278,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Artist Photo Upload - Logo Upload"
-    - "Artist Photo Upload - Gallery Upload"
-    - "Artist Photo Upload - Error Handling"
-    - "Artist Photo Upload - Image Display"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
