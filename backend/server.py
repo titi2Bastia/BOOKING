@@ -460,6 +460,15 @@ async def get_invitations(current_user: User = Depends(get_current_admin)):
     invitations = await db.invitations.find().to_list(1000)
     return [Invitation(**inv) for inv in invitations]
 
+@api_router.delete("/invitations/{invitation_id}")
+async def delete_invitation(invitation_id: str, current_user: User = Depends(get_current_admin)):
+    invitation = await db.invitations.find_one({"id": invitation_id})
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation non trouvée")
+    
+    await db.invitations.delete_one({"id": invitation_id})
+    return {"message": "Invitation supprimée"}
+
 # Artist profile endpoints
 @api_router.post("/profile", response_model=ArtistProfile)
 async def create_or_update_profile(profile_data: ArtistProfileCreate, current_user: User = Depends(get_current_user)):
