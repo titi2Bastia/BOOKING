@@ -126,7 +126,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     availabilities.forEach(day => {
       calendarEvents.push({
         id: `avail-${day.id}`,
-        title: `Disponible — ${day.artist_name || 'Artiste inconnu'}`,
+        title: day.artist_name || 'Artiste inconnu',
         start: new Date(`${day.date}T00:00:00`),
         end: new Date(`${day.date}T23:59:59`),
         allDay: true,
