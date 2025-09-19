@@ -39,7 +39,8 @@ const ArtistDashboard = ({ user, onLogout }) => {
     try {
       await Promise.all([
         loadProfile(),
-        loadAvailabilityDays()
+        loadAvailabilityDays(),
+        loadBlockedDates()
       ]);
     } catch (error) {
       console.error('Error loading data:', error);
