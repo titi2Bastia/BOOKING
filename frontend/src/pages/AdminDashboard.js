@@ -173,6 +173,18 @@ const AdminDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const deleteInvitation = async (invitationId) => {
+    try {
+      await axios.delete(`/invitations/${invitationId}`);
+      toast.success('Invitation supprimée avec succès');
+      loadInvitations();
+    } catch (error) {
+      console.error('Error deleting invitation:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la suppression';
+      toast.error(message);
+    }
+  };
+
   const sendInvitation = async () => {
     try {
       const response = await axios.post('/invitations', { email: inviteEmail });
