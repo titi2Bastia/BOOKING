@@ -360,6 +360,7 @@ const ArtistDashboard = ({ user, onLogout }) => {
                       <li>• <strong>Cliquez sur un jour</strong> pour basculer votre disponibilité (ON/OFF)</li>
                       <li>• <strong>Journées entières uniquement</strong> - pas de créneaux horaires</li>
                       <li>• <strong>Dates passées :</strong> grisées et non modifiables</li>
+                      <li>• <strong>Dates bloquées :</strong> en rouge, bloquées par l'administrateur</li>
                       <li>• <strong>Fenêtre d'édition :</strong> jusqu'à 18 mois dans le futur</li>
                       <li>• Vous pouvez ajouter une note optionnelle à chaque jour</li>
                     </ul>
