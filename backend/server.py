@@ -261,7 +261,7 @@ async def save_uploaded_file(file: UploadFile, subfolder: str = "") -> str:
         await f.write(content)
     
     # Return relative path for URL (using API route)
-    relative_path = f"api/uploads/{subfolder}/{unique_filename}" if subfolder else f"api/uploads/{unique_filename}"
+    relative_path = f"/api/uploads/{subfolder}/{unique_filename}" if subfolder else f"/api/uploads/{unique_filename}"
     return relative_path
 
 def remove_file(file_path: str):
