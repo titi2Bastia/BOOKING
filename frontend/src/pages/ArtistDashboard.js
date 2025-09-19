@@ -150,6 +150,25 @@ const ArtistDashboard = ({ user, onLogout }) => {
     }
   };
 
+  const eventStyleGetter = (event) => {
+    if (event.resource?.type === 'blocked') {
+      return {
+        style: {
+          backgroundColor: '#9ca3af',
+          borderColor: '#6b7280',
+          color: 'white',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      };
+    }
+    return {};
+  };
+
+  const handleNavigate = (newDate) => {
+    setCurrentDate(newDate);
+  };
+
   const handleDateClick = (date) => {
     const clickedDate = moment(date).format('YYYY-MM-DD');
     const today = moment().format('YYYY-MM-DD');
