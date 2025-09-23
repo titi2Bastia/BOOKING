@@ -29,9 +29,9 @@ import {
   Trash2,
   RefreshCw
 } from 'lucide-react';
-import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/fr';
+import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { toast } from 'sonner';
