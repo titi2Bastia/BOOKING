@@ -427,6 +427,202 @@ class ArtistCalendarAPITester:
         
         return success
 
+    def test_artist_category_update_functionality(self):
+        """Test artist category update functionality as requested"""
+        if not self.admin_token:
+            self.log_test("Artist Category Update Tests", False, "No admin token available")
+            return False
+
+        admin_headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        print("\n🎯 TESTING ARTIST CATEGORY UPDATE FUNCTIONALITY")
+        print("=" * 60)
+        
+        # Step 1: Get all artists to find test subjects
+        success, artists = self.run_test(
+            "Get All Artists for Category Testing",
+            "GET",
+            "artists",
+            200,
+            headers=admin_headers
+        )
+        
+        if not success or not artists:
+            self.log_test("Artist Category Update Tests", False, "No artists found to test with")
+            return False
+        
+        # Find an artist to test with
+        test_artist = None
+        for artist in artists:
+            if artist.get('id'):
+                test_artist = artist
+                break
+        
+        if not test_artist:
+            self.log_test("Artist Category Update Tests", False, "No valid artist found for testing")
+            return False
+        
+        artist_id = test_artist['id']
+        print(f"   Using test artist: {test_artist.get('nom_de_scene', test_artist.get('email', 'Unknown'))}")
+        
+        # Step 2: Test PATCH endpoint to update category to DJ
+        success, dj_response = self.run_test(
+            "Update Artist Category to DJ",
+            "PATCH",
+            f"artists/{artist_id}/category",
+            200,
+            data={"category": "DJ"},
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Verify response contains the updated category
+        if dj_response.get('category') != 'DJ':
+            self.log_test("Update Artist Category to DJ", False, f"Expected category 'DJ', got {dj_response.get('category')}")
+            return False
+        
+        # Step 3: Test PATCH endpoint to update category to Groupe
+        success, groupe_response = self.run_test(
+            "Update Artist Category to Groupe",
+            "PATCH",
+            f"artists/{artist_id}/category",
+            200,
+            data={"category": "Groupe"},
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Verify response contains the updated category
+        if groupe_response.get('category') != 'Groupe':
+            self.log_test("Update Artist Category to Groupe", False, f"Expected category 'Groupe', got {groupe_response.get('category')}")
+            return False
+        
+        # Step 4: Test invalid category (should fail)
+        success, _ = self.run_test(
+            "Update Artist Category to Invalid Value (Should Fail)",
+            "PATCH",
+            f"artists/{artist_id}/category",
+            400,  # Should fail with 400
+            data={"category": "InvalidCategory"},
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Step 5: Create a test availability for this artist (need artist token)
+        if self.artist_token:
+            artist_headers = {'Authorization': f'Bearer {self.artist_token}'}
+            
+            # Create availability for tomorrow
+            tomorrow = (datetime.now() + timedelta(days=1)).date()
+            toggle_data = {
+                "date": tomorrow.isoformat(),
+                "note": "Test availability for category testing",
+                "color": "#3b82f6"
+            }
+            
+            success, toggle_response = self.run_test(
+                "Create Test Availability for Category Testing",
+                "POST",
+                "availability-days/toggle",
+                200,
+                data=toggle_data,
+                headers=artist_headers
+            )
+            
+            if success and toggle_response.get('action') == 'added':
+                print("   ✅ Test availability created successfully")
+            else:
+                print("   ⚠️ Could not create test availability, continuing with other tests")
+        
+        # Step 6: Test availability-days endpoint returns artist_category field
+        success, availability_days = self.run_test(
+            "Get Availability Days with Artist Category",
+            "GET",
+            "availability-days",
+            200,
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Check if availability days contain artist_category field
+        category_found = False
+        for day in availability_days:
+            if 'artist_category' in day:
+                category_found = True
+                print(f"   ✅ Found artist_category field: {day.get('artist_category')}")
+                break
+        
+        if not category_found:
+            self.log_test("Availability Days Category Field", False, "artist_category field not found in availability-days response")
+            return False
+        else:
+            self.log_test("Availability Days Category Field", True, "artist_category field found in response")
+        
+        # Step 7: Update category again and verify it's reflected in availability-days
+        success, final_update = self.run_test(
+            "Final Category Update to DJ",
+            "PATCH",
+            f"artists/{artist_id}/category",
+            200,
+            data={"category": "DJ"},
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Get availability days again to check if category is updated
+        success, updated_availability_days = self.run_test(
+            "Verify Category Update in Availability Days",
+            "GET",
+            "availability-days",
+            200,
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        # Check if the category is properly updated
+        updated_category_found = False
+        for day in updated_availability_days:
+            if day.get('artist_id') == artist_id and 'artist_category' in day:
+                updated_category_found = True
+                if day.get('artist_category') == 'DJ':
+                    print(f"   ✅ Category successfully updated in availability-days: {day.get('artist_category')}")
+                    self.log_test("Category Update Synchronization", True, "Category properly synchronized in availability-days")
+                else:
+                    self.log_test("Category Update Synchronization", False, f"Expected 'DJ', got {day.get('artist_category')}")
+                    return False
+                break
+        
+        if not updated_category_found:
+            print("   ⚠️ No availability days found for test artist to verify category sync")
+        
+        # Step 8: Test non-existent artist (should fail)
+        success, _ = self.run_test(
+            "Update Category for Non-existent Artist (Should Fail)",
+            "PATCH",
+            "artists/non-existent-id/category",
+            404,  # Should fail with 404
+            data={"category": "DJ"},
+            headers=admin_headers
+        )
+        
+        if not success:
+            return False
+        
+        print("   🎉 All artist category update tests completed successfully!")
+        return True
+
     def run_all_tests(self):
         """Run all tests in sequence"""
         print("🚀 Starting Artist Calendar API Tests")
