@@ -58,6 +58,11 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
       }));
       
       toast.success(`Catégorie mise à jour : ${newCategory}`);
+      
+      // Notify parent component to refresh calendar data
+      if (onArtistUpdated) {
+        onArtistUpdated();
+      }
     } catch (error) {
       console.error('Error updating category:', error);
       const message = error.response?.data?.detail || 'Erreur lors de la mise à jour';
