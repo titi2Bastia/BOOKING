@@ -514,26 +514,37 @@ const AdminDashboard = ({ user, onLogout }) => {
       return nameA.localeCompare(nameB);
     });
 
-  // Get category color for artist cards
+  // Get category color for artist cards (enhanced)
   const getArtistCategoryColor = (category) => {
     switch(category) {
       case 'DJ': 
-        return 'border-blue-500 bg-blue-50';
+        return 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-blue-100';
       case 'Groupe': 
-        return 'border-green-500 bg-green-50';
+        return 'border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-green-100';
       default: 
-        return 'border-gray-300 bg-white';
+        return 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100';
     }
   };
 
   const getCategoryBadgeColor = (category) => {
     switch(category) {
       case 'DJ': 
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500 text-white border-blue-600 shadow-lg';
       case 'Groupe': 
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-500 text-white border-green-600 shadow-lg';
       default: 
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-400 text-white border-gray-500';
+    }
+  };
+
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'DJ': 
+        return '🎧';
+      case 'Groupe': 
+        return '🎵';
+      default: 
+        return '🎤';
     }
   };
 
