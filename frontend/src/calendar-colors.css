@@ -1,43 +1,60 @@
-/* FORCE CSS COLORS FOR CALENDAR */
-.dj-event-style,
-.rbc-event.dj-event-style {
-  background-color: #3b82f6 !important;
-  border: 1px solid #2563eb !important;
-  color: white !important;
-  font-weight: bold !important;
-}
+/* AGGRESSIVE CSS OVERRIDES FOR CALENDAR COLORS */
 
-.groupe-event-style,
-.rbc-event.groupe-event-style {
-  background-color: #10b981 !important;
-  border: 1px solid #059669 !important;
-  color: white !important;
-  font-weight: bold !important;
-}
-
-.blocked-event-style,
-.rbc-event.blocked-event-style {
-  background-color: #dc2626 !important;
-  border: 1px solid #b91c1c !important;
-  color: white !important;
-  font-weight: bold !important;
-}
-
-.default-event-style,
-.rbc-event.default-event-style {
-  background-color: #6b7280 !important;
-  border: 1px solid #4b5563 !important;
-  color: white !important;
-  font-weight: bold !important;
-}
-
-/* OVERRIDE ALL CALENDAR EVENT COLORS */
-.rbc-event:has-text("Titi salducci") {
-  background-color: #3b82f6 !important;
+/* Force DJ events to be BLUE */
+.rbc-event:has(.dj-event) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
   border-color: #2563eb !important;
+  color: white !important;
 }
 
-.rbc-event:has-text("Cdl") {
-  background-color: #10b981 !important;
+/* Force Groupe events to be GREEN */
+.rbc-event:has(.groupe-event) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   border-color: #059669 !important;
+  color: white !important;
+}
+
+/* Force Blocked events to be RED */
+.rbc-event:has(.blocked-event) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  border-color: #b91c1c !important;
+  color: white !important;
+}
+
+/* Alternative: Force by event text content */
+.rbc-event[title*="Cdl"] {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border-color: #059669 !important;
+  color: white !important;
+}
+
+.rbc-event[title*="Titi"] {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  border-color: #2563eb !important;
+  color: white !important;
+}
+
+.rbc-event[title*="🚫"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  border-color: #b91c1c !important;
+  color: white !important;
+}
+
+/* More aggressive override - target all events and then override based on category */
+.rbc-event-allday {
+  background: #6b7280 !important; /* Default gray */
+  border-color: #4b5563 !important;
+  color: white !important;
+}
+
+.rbc-event-allday[style*="background-color: rgb(59, 130, 246)"] {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+}
+
+.rbc-event-allday[style*="background-color: rgb(16, 185, 129)"] {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.rbc-event-allday[style*="background-color: rgb(220, 38, 38)"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
 }
