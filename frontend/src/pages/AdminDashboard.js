@@ -714,7 +714,6 @@ const AdminDashboard = ({ user, onLogout }) => {
                         view="month"
                         date={currentDate}
                         onNavigate={handleNavigate}
-                        eventPropGetter={eventStyleGetter}
                         messages={{
                           next: 'Suivant',
                           previous: 'Précédent',
