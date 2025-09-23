@@ -65,7 +65,7 @@ const ArtistDashboard = ({ user, onLogout }) => {
   };
 
   const loadAvailabilityDays = async () => {
-    try:
+    try {
       // Load availability days for the current year and next year
       const startDate = moment().startOf('year').format('YYYY-MM-DD');
       const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
