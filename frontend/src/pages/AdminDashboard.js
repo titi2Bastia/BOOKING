@@ -64,12 +64,19 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const loadData = async () => {
     try {
+      // Load base data in parallel
       await Promise.all([
         loadArtists(),
-        loadAvailabilityDays(),
-        loadBlockedDates(),
         loadInvitations()
       ]);
+      
+      // Load calendar data sequentially to ensure proper updating
+      const availabilityData = await loadAvailabilityDays();
+      const blockedData = await loadBlockedDates();
+      
+      // Final update with both datasets
+      updateCalendarEvents(availabilityData, blockedData);
+      
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
