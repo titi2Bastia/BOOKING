@@ -408,9 +408,16 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const eventStyleGetter = (event) => {
+    // Use INLINE STYLES instead of CSS classes for better reliability
     if (event.resource?.type === 'blocked') {
       return {
-        className: 'blocked-event-style'
+        style: {
+          backgroundColor: '#dc2626',
+          borderColor: '#b91c1c',
+          color: 'white',
+          fontWeight: 'bold',
+          border: '1px solid #b91c1c'
+        }
       };
     }
     
@@ -419,18 +426,37 @@ const AdminDashboard = ({ user, onLogout }) => {
       
       if (category === 'DJ') {
         return {
-          className: 'dj-event-style'
+          style: {
+            backgroundColor: '#3b82f6',
+            borderColor: '#2563eb',
+            color: 'white',
+            fontWeight: 'bold',
+            border: '1px solid #2563eb'
+          }
         };
       }
       
       if (category === 'Groupe') {
         return {
-          className: 'groupe-event-style'
+          style: {
+            backgroundColor: '#10b981',
+            borderColor: '#059669',
+            color: 'white',
+            fontWeight: 'bold',
+            border: '1px solid #059669'
+          }
         };
       }
       
+      // Default uncategorized style
       return {
-        className: 'default-event-style'
+        style: {
+          backgroundColor: '#6b7280',
+          borderColor: '#4b5563',
+          color: 'white',
+          fontWeight: 'bold',
+          border: '1px solid #4b5563'
+        }
       };
     }
     
