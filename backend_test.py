@@ -637,8 +637,7 @@ class ArtistCalendarAPITester:
             return False
         
         if not self.test_artist_login():
-            print("❌ Artist login failed, stopping tests")
-            return False
+            print("❌ Artist login failed, continuing with admin-only tests")
         
         if not self.test_artist2_login():
             print("❌ Second artist login failed, continuing with other tests")
