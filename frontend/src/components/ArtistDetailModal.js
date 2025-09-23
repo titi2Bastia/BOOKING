@@ -24,6 +24,9 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [updatingCategory, setUpdatingCategory] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProfile, setEditedProfile] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen && artistId) {
