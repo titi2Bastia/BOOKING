@@ -88,11 +88,11 @@ class ArtistCalendarAPITester:
     def test_artist_login(self):
         """Test artist login"""
         success, response = self.run_test(
-            "Artist Login (DJ Alex)",
+            "Artist Login (test.blocked@example.com)",
             "POST",
             "auth/login",
             200,
-            data={"email": "dj.alex@demo.app", "password": "demo123"}
+            data={"email": "test.blocked@example.com", "password": "password123"}
         )
         if success and 'access_token' in response:
             self.artist_token = response['access_token']
