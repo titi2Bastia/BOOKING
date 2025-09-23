@@ -26,7 +26,8 @@ import {
   Copy,
   Check,
   ExternalLink,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
