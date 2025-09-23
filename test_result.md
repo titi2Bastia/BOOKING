@@ -385,7 +385,8 @@ metadata:
         comment: "New admin artist profile editing functionality implemented. Need to test: modal access via eye icon, edit mode activation, field editing (stage name, phone, rate, link, category, bio), save/cancel functionality."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Admin Artist Profile Editing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
