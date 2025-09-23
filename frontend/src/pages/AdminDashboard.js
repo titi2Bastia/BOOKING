@@ -995,6 +995,71 @@ const AdminDashboard = ({ user, onLogout }) => {
         }}
         onArtistUpdated={refreshCalendarData}
       />
+
+      {/* Quick Category Change Modal */}
+      <Dialog open={showCategoryModal} onOpenChange={setShowCategoryModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Music className="h-5 w-5 mr-2 text-purple-600" />
+              Changer la catégorie
+            </DialogTitle>
+          </DialogHeader>
+          {selectedEventForCategory && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-gray-800 mb-2">
+                  <strong>Artiste :</strong> {selectedEventForCategory.artist_name}
+                </p>
+                <p className="text-sm text-gray-800 mb-2">
+                  <strong>Date :</strong> {moment(selectedEventForCategory.date).format('dddd DD MMMM YYYY')}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Catégorie actuelle :</strong> {selectedEventForCategory.artist_category || 'Non définie'}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-900">Nouvelle catégorie :</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => quickChangeCategory(
+                      selectedEventForCategory.artist_id,
+                      'DJ',
+                      selectedEventForCategory.artist_name
+                    )}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    DJ
+                  </Button>
+                  <Button
+                    onClick={() => quickChangeCategory(
+                      selectedEventForCategory.artist_id,
+                      'Groupe',
+                      selectedEventForCategory.artist_name
+                    )}
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  >
+                    Groupe
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCategoryModal(false);
+                    setSelectedEventForCategory(null);
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
