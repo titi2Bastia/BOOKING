@@ -599,15 +599,26 @@ const AdminDashboard = ({ user, onLogout }) => {
                         <Calendar className="h-5 w-5 mr-2" />
                         Calendrier agrégé ({availabilityDays.length} dispos, {blockedDates.length} bloquées)
                       </div>
-                      <div className="flex items-center space-x-4 text-sm">
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
-                          <span>Disponibilités</span>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 text-sm">
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                            <span>Disponibilités</span>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
+                            <span>Dates bloquées</span>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <div className="w-3 h-3 bg-red-600 rounded mr-2"></div>
-                          <span>Dates bloquées</span>
-                        </div>
+                        <Button
+                          variant="outline" 
+                          size="sm"
+                          onClick={refreshCalendarData}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Actualiser
+                        </Button>
                       </div>
                     </CardTitle>
                   </CardHeader>
