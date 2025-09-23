@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { 
   User, 
   DollarSign, 
@@ -12,7 +13,8 @@ import {
   Calendar,
   Mail,
   Image as ImageIcon,
-  X
+  X,
+  Tag
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
