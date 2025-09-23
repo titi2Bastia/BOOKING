@@ -144,32 +144,19 @@ const AdminDashboard = ({ user, onLogout }) => {
   const updateCalendarEvents = (availabilities, blocked) => {
     const calendarEvents = [];
     
-    // Add availability events with FORCED COLORS
+    // Add availability events (remove forced colors)
     availabilities.forEach(day => {
-      // FORCE COLOR BASED ON CATEGORY
-      let eventColor = '#6b7280'; // Default gray
-      
-      if (day.artist_category === 'DJ') {
-        eventColor = '#3b82f6'; // BLEU pour DJ
-      } else if (day.artist_category === 'Groupe') {
-        eventColor = '#10b981'; // VERT pour Groupe
-      }
-      
       calendarEvents.push({
         id: `avail-${day.id}`,
         title: day.artist_name || 'Artiste inconnu',
         start: new Date(`${day.date}T00:00:00`),
         end: new Date(`${day.date}T23:59:59`),
         allDay: true,
-        color: eventColor,
-        backgroundColor: eventColor,
-        borderColor: eventColor,
         resource: {
           ...day,
           type: 'availability',
           artist_name: day.artist_name || 'Artiste inconnu',
-          artist_category: day.artist_category,
-          color: eventColor
+          artist_category: day.artist_category
         }
       });
     });
@@ -182,9 +169,6 @@ const AdminDashboard = ({ user, onLogout }) => {
         start: new Date(`${blockedDate.date}T00:00:00`),
         end: new Date(`${blockedDate.date}T23:59:59`),
         allDay: true,
-        color: '#dc2626',
-        backgroundColor: '#dc2626',
-        borderColor: '#dc2626',
         resource: {
           ...blockedDate,
           type: 'blocked'
