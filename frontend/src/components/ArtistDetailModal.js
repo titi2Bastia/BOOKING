@@ -171,9 +171,47 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              Fiche Artiste Détaillée
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Fiche Artiste Détaillée
+                {profile?.category && (
+                  <Badge className={`ml-3 ${getCategoryColor(profile.category)}`}>
+                    {profile.category === 'DJ' ? '🎧' : '🎵'} {profile.category}
+                  </Badge>
+                )}
+              </div>
+              {!isEditing ? (
+                <Button
+                  onClick={handleEditStart}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifier
+                </Button>
+              ) : (
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </Button>
+                  <Button
+                    onClick={handleEditCancel}
+                    disabled={saving}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Annuler
+                  </Button>
+                </div>
+              )}
             </DialogTitle>
           </DialogHeader>
 
