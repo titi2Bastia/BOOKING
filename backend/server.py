@@ -900,6 +900,7 @@ async def get_availability_days(
             day.pop('_id', None)
             day['artist_name'] = profile.get('nom_de_scene') if profile else (user.get('email') if user else 'Artiste inconnu')
             day['artist_email'] = user.get('email') if user else ''
+            day['artist_category'] = profile.get('category') if profile else None
             
             result.append(day)
         
