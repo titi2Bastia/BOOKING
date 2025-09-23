@@ -257,7 +257,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       
       // Get the invitation token from the response
       const invitationToken = response.data.token;
-      const frontendUrl = process.env.REACT_APP_BACKEND_URL || 'https://avail-dj.preview.emergentagent.com';
+      const frontendUrl = process.env.REACT_APP_BACKEND_URL || 'https://gig-calendar-1.preview.emergentagent.com';
       const fullInvitationLink = `${frontendUrl}/invite/${invitationToken}`;
       
       setInvitationLink({
