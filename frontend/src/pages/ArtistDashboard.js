@@ -37,11 +37,15 @@ const ArtistDashboard = ({ user, onLogout }) => {
 
   const loadData = async () => {
     try {
-      await Promise.all([
-        loadProfile(),
-        loadAvailabilityDays(),
-        loadBlockedDates()
-      ]);
+      await loadProfile();
+      
+      // Load calendar data sequentially
+      const availabilityData = await loadAvailabilityDays();
+      const blockedData = await loadBlockedDates();
+      
+      // Final update with both datasets
+      updateCalendarEvents(availabilityData, blockedData);
+      
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
