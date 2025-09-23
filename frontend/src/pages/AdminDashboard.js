@@ -280,8 +280,22 @@ const AdminDashboard = ({ user, onLogout }) => {
     updateCalendarEvents(availabilityDays, newBlockedDates);
   };
 
+  const refreshCalendarData = async () => {
+    try {
+      const availabilityData = await loadAvailabilityDays();
+      const blockedData = await loadBlockedDates();
+      updateCalendarEvents(availabilityData, blockedData);
+    } catch (error) {
+      console.error('Error refreshing calendar data:', error);
+    }
+  };
+
   const handleNavigate = (newDate) => {
     setCurrentDate(newDate);
+    // Refresh data when navigating to ensure all events are visible
+    if (Math.abs(moment(newDate).diff(moment(), 'months')) > 1) {
+      refreshCalendarData();
+    }
   };
 
   const handleSelectEvent = (event) => {
