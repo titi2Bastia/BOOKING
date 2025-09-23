@@ -65,18 +65,20 @@ const ArtistDashboard = ({ user, onLogout }) => {
   };
 
   const loadAvailabilityDays = async () => {
-    try {
+    try:
       // Load availability days for the current year and next year
       const startDate = moment().startOf('year').format('YYYY-MM-DD');
       const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
-      setAvailabilityDays(response.data);
+      const newAvailabilityDays = response.data;
+      setAvailabilityDays(newAvailabilityDays);
       
-      updateCalendarEvents(response.data, blockedDates);
+      return newAvailabilityDays;
     } catch (error) {
       console.error('Error loading availability days:', error);
       toast.error('Erreur lors du chargement des disponibilités');
+      return [];
     }
   };
 
@@ -87,12 +89,14 @@ const ArtistDashboard = ({ user, onLogout }) => {
       const endDate = moment().add(2, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/blocked-dates?start_date=${startDate}&end_date=${endDate}`);
-      setBlockedDates(response.data);
+      const newBlockedDates = response.data;
+      setBlockedDates(newBlockedDates);
       
-      updateCalendarEvents(availabilityDays, response.data);
+      return newBlockedDates;
     } catch (error) {
       console.error('Error loading blocked dates:', error);
       // Don't show error toast for blocked dates as it's not critical
+      return [];
     }
   };
 
