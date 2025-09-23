@@ -141,10 +141,15 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const updateCalendarEvents = (availabilities, blocked) => {
+    console.log('=== DEBUG COLORS ===');
+    console.log('Availabilities received:', availabilities);
+    
     const calendarEvents = [];
     
     // Add availability events
     availabilities.forEach(day => {
+      console.log(`Artist: ${day.artist_name}, Category: ${day.artist_category}`);
+      
       calendarEvents.push({
         id: `avail-${day.id}`,
         title: day.artist_name || 'Artiste inconnu',
@@ -175,6 +180,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       });
     });
     
+    console.log('Final calendar events:', calendarEvents);
     setEvents(calendarEvents);
   };
 
