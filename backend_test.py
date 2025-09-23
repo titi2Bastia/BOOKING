@@ -78,7 +78,7 @@ class ArtistCalendarAPITester:
             "POST",
             "auth/login",
             200,
-            data={"email": "admin@demo.app", "password": "demo123"}
+            data={"email": "admin@easybookevent.com", "password": "AdminSecure2024!"}
         )
         if success and 'access_token' in response:
             self.admin_token = response['access_token']
