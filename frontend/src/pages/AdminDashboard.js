@@ -58,6 +58,8 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [invitationLink, setInvitationLink] = useState(null);
   const [showInvitationLink, setShowInvitationLink] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedEventForCategory, setSelectedEventForCategory] = useState(null);
 
   useEffect(() => {
     loadData();
