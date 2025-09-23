@@ -144,7 +144,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   const updateCalendarEvents = (availabilities, blocked) => {
     const calendarEvents = [];
     
-    // Add availability events (remove forced colors)
+    // Add availability events
     availabilities.forEach(day => {
       calendarEvents.push({
         id: `avail-${day.id}`,
@@ -177,6 +177,56 @@ const AdminDashboard = ({ user, onLogout }) => {
     });
     
     setEvents(calendarEvents);
+    
+    // Force DOM color override after render
+    setTimeout(() => {
+      applyEventColors(availabilities, blocked);
+    }, 100);
+  };
+
+  const applyEventColors = (availabilities, blocked) => {
+    try {
+      // Force apply colors to calendar events via DOM manipulation
+      const eventElements = document.querySelectorAll('.rbc-event');
+      
+      eventElements.forEach(element => {
+        const eventText = element.textContent || '';
+        
+        // Apply colors based on text content (brute force approach)
+        if (eventText.includes('🚫')) {
+          // Blocked dates
+          element.style.setProperty('background', 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', 'important');
+          element.style.setProperty('border-color', '#b91c1c', 'important');
+          element.style.setProperty('color', 'white', 'important');
+        } else {
+          // Find matching availability to get category
+          const matchingAvailability = availabilities.find(avail => 
+            (avail.artist_name || '').toLowerCase() === eventText.toLowerCase().trim()
+          );
+          
+          if (matchingAvailability) {
+            if (matchingAvailability.artist_category === 'DJ') {
+              element.style.setProperty('background', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 'important');
+              element.style.setProperty('border-color', '#2563eb', 'important');
+              element.style.setProperty('color', 'white', 'important');
+            } else if (matchingAvailability.artist_category === 'Groupe') {
+              element.style.setProperty('background', 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 'important');
+              element.style.setProperty('border-color', '#059669', 'important');
+              element.style.setProperty('color', 'white', 'important');
+            } else {
+              // Uncategorized
+              element.style.setProperty('background', 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)', 'important');
+              element.style.setProperty('border-color', '#4b5563', 'important');
+              element.style.setProperty('color', 'white', 'important');
+            }
+          }
+        }
+      });
+      
+      console.log('Applied colors to', eventElements.length, 'calendar events');
+    } catch (error) {
+      console.error('Error applying event colors:', error);
+    }
   };
 
   const loadInvitations = async () => {
