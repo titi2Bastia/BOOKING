@@ -161,6 +161,30 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
                             </div>
                           )}
                           
+                          {/* Category Section */}
+                          <div className="flex items-center space-x-2">
+                            <Tag className="h-4 w-4 mr-2 text-purple-600" />
+                            <span className="text-sm text-gray-600 mr-2">Catégorie :</span>
+                            <Select 
+                              value={profile.category || ''} 
+                              onValueChange={updateCategory}
+                              disabled={updatingCategory}
+                            >
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue placeholder="Choisir" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="DJ">DJ</SelectItem>
+                                <SelectItem value="Groupe">Groupe</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {profile.category && (
+                              <Badge className={getCategoryColor(profile.category)}>
+                                {profile.category}
+                              </Badge>
+                            )}
+                          </div>
+                          
                           <div className="flex items-center text-gray-600">
                             <Calendar className="h-4 w-4 mr-2" />
                             <span className="text-sm">
