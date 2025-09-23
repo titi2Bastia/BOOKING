@@ -397,59 +397,29 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const eventStyleGetter = (event) => {
-    console.log('=== STYLE GETTER ===');
-    console.log('Event:', event);
-    console.log('Resource type:', event.resource?.type);
-    console.log('Artist category:', event.resource?.artist_category);
-    
     if (event.resource?.type === 'blocked') {
       return {
-        style: {
-          backgroundColor: '#dc2626', // ROUGE pour dates bloquées
-          borderColor: '#b91c1c',
-          color: 'white',
-          fontWeight: 'bold'
-        }
+        className: 'blocked-event-style'
       };
     }
     
-    // COULEURS PAR CATÉGORIE - FORCE L'ÉCRASEMENT
     if (event.resource?.type === 'availability') {
       const category = event.resource?.artist_category;
-      console.log('Processing availability with category:', category);
       
       if (category === 'DJ') {
-        console.log('Applying BLUE for DJ');
         return {
-          style: {
-            backgroundColor: '#3b82f6 !important', // BLEU pour DJ
-            borderColor: '#2563eb !important',
-            color: 'white !important',
-            fontWeight: 'bold'
-          }
+          className: 'dj-event-style'
         };
       }
       
       if (category === 'Groupe') {
-        console.log('Applying GREEN for Groupe');
         return {
-          style: {
-            backgroundColor: '#10b981 !important', // VERT pour Groupe  
-            borderColor: '#059669 !important',
-            color: 'white !important',
-            fontWeight: 'bold'
-          }
+          className: 'groupe-event-style'
         };
       }
       
-      console.log('Applying GRAY for no category');
       return {
-        style: {
-          backgroundColor: '#6b7280 !important', // GRIS pour pas de catégorie
-          borderColor: '#4b5563 !important', 
-          color: 'white !important',
-          fontWeight: 'bold'
-        }
+        className: 'default-event-style'
       };
     }
     
