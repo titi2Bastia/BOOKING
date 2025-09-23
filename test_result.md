@@ -310,7 +310,7 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 1
+  test_sequence: 2
   run_ui: true
 
 test_plan:
@@ -330,3 +330,5 @@ agent_communication:
     message: "🔄 STARTING PHOTO UPLOAD TESTING: Now testing artist photo upload functionality including logo upload, gallery upload, image display, and error handling scenarios. Will test with artist account test.blocked@example.com."
   - agent: "testing"
     message: "✅ PHOTO UPLOAD TESTING COMPLETED SUCCESSFULLY! Fixed critical URL prefix bug in backend (missing leading slash in image URLs). All photo upload functionality now working: ✅ Logo upload working with correct /api/uploads/logos/ URLs ✅ Gallery upload working with correct /api/uploads/gallery/ URLs ✅ Images display correctly and load properly ✅ Error handling working (file type validation, size limits) ✅ Gallery counter shows correct count (X/5) ✅ Backend serves images via proper API routes ✅ File validation prevents invalid uploads (non-images, >2MB files) ✅ Multiple gallery uploads supported up to 5 max limit. Photo upload system ready for production use."
+  - agent: "testing"
+    message: "🎯 ARTIST CATEGORY UPDATE TESTING COMPLETED SUCCESSFULLY! Comprehensive testing of category update functionality completed with all tests passing: ✅ PATCH /api/artists/{artist_id}/category endpoint working perfectly (DJ ↔ Groupe updates) ✅ Category validation working (rejects invalid categories with 400 status) ✅ /api/availability-days endpoint correctly returns artist_category field ✅ Real-time synchronization working (category updates immediately reflected in availability-days) ✅ Complete data flow verified (create artist → create availability → update category → verify sync) ✅ Error handling working (404 for non-existent artists) ✅ Database updates working correctly. No issues found in the category update chain - all functionality working as expected."
