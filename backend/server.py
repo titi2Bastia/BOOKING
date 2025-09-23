@@ -640,6 +640,7 @@ async def get_all_artists(current_user: User = Depends(get_current_admin)):
                 logo_url=profile.get('logo_url'),
                 gallery_urls=profile.get('gallery_urls', []),
                 bio=profile.get('bio'),
+                category=profile.get('category'),
                 availability_count=availability_count
             ))
         else:
