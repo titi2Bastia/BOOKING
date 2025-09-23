@@ -521,14 +521,39 @@ const AdminDashboard = ({ user, onLogout }) => {
               <CardContent className="pt-6">
                 <div className="flex items-start space-x-3">
                   <Info className="h-5 w-5 text-purple-600 mt-0.5" />
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-semibold text-purple-900 mb-2">Vue Administrateur</h3>
-                    <ul className="text-sm text-purple-800 space-y-1">
-                      <li>• <strong>Calendrier agrégé</strong> de tous les artistes (journées entières)</li>
-                      <li>• <strong>Dates bloquées</strong> apparaissent en rouge avec 🚫</li>
-                      <li>• <strong>Cliquez sur une date</strong> pour voir qui est disponible ce jour</li>
-                      <li>• Export CSV avec disponibilités et dates bloquées</li>
-                    </ul>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <ul className="text-sm text-purple-800 space-y-1">
+                          <li>• <strong>Calendrier agrégé</strong> de tous les artistes (journées entières)</li>
+                          <li>• <strong>Dates bloquées</strong> apparaissent en rouge avec 🚫</li>
+                          <li>• <strong>Cliquez sur une date</strong> pour voir qui est disponible ce jour</li>
+                          <li>• Export CSV avec disponibilités et dates bloquées</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-purple-900 mb-2">Code couleur :</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                            <span className="text-sm text-purple-800">DJ</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-emerald-500 rounded"></div>
+                            <span className="text-sm text-purple-800">Groupe</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-gray-500 rounded"></div>
+                            <span className="text-sm text-purple-800">Non catégorisé</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-red-600 rounded"></div>
+                            <span className="text-sm text-purple-800">🚫 Date bloquée</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
