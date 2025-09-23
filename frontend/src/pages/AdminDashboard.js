@@ -500,19 +500,38 @@ const AdminDashboard = ({ user, onLogout }) => {
     return {};
   };
 
-  // Filter and sort artists
+  // Filter and sort artists with category filtering
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  
   const filteredAndSortedArtists = artists
     .filter(artist => {
+      // Search term filter
       const searchTerm = artistSearchFilter.toLowerCase();
       const name = (artist.nom_de_scene || artist.email || '').toLowerCase();
       const email = (artist.email || '').toLowerCase();
-      return name.includes(searchTerm) || email.includes(searchTerm);
+      const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+      
+      // Category filter
+      const matchesCategory = categoryFilter === 'all' || 
+                             (categoryFilter === 'DJ' && artist.category === 'DJ') ||
+                             (categoryFilter === 'Groupe' && artist.category === 'Groupe') ||
+                             (categoryFilter === 'uncategorized' && !artist.category);
+      
+      return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
       const nameA = (a.nom_de_scene || a.email || '').toLowerCase();
       const nameB = (b.nom_de_scene || b.email || '').toLowerCase();
       return nameA.localeCompare(nameB);
     });
+
+  // Count artists by category
+  const artistCounts = {
+    total: artists.length,
+    dj: artists.filter(a => a.category === 'DJ').length,
+    groupe: artists.filter(a => a.category === 'Groupe').length,
+    uncategorized: artists.filter(a => !a.category).length
+  };
 
   // Get category color for artist cards (enhanced)
   const getArtistCategoryColor = (category) => {
