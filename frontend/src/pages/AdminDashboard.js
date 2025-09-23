@@ -324,6 +324,45 @@ const AdminDashboard = ({ user, onLogout }) => {
         }
       };
     }
+    
+    // Color by artist category
+    if (event.resource?.type === 'availability') {
+      const category = event.resource?.artist_category;
+      switch(category) {
+        case 'DJ':
+          return {
+            style: {
+              backgroundColor: '#3b82f6',
+              borderColor: '#2563eb',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }
+          };
+        case 'Groupe':
+          return {
+            style: {
+              backgroundColor: '#10b981',
+              borderColor: '#059669',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }
+          };
+        default:
+          // Default color for artists without category
+          return {
+            style: {
+              backgroundColor: '#6b7280',
+              borderColor: '#4b5563',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }
+          };
+      }
+    }
+    
     return {};
   };
 
