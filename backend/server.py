@@ -143,6 +143,7 @@ class ArtistProfileUpdate(BaseModel):
     telephone: Optional[str] = None
     lien: Optional[str] = None
     tarif_soiree: Optional[str] = None
+    category: Optional[ArtistCategory] = None
     bio: Optional[str] = Field(None, max_length=BIO_MAX_LEN)
 
 class Invitation(BaseModel):
