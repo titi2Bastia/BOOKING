@@ -402,16 +402,26 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
               </Card>
 
               {/* Bio */}
-              {profile.bio && (
+              {(!isEditing && profile.bio) || isEditing ? (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-start space-x-3">
                       <FileText className="h-5 w-5 text-gray-600 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 mb-2">Description / Bio</h3>
-                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                          {profile.bio}
-                        </p>
+                        {!isEditing ? (
+                          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                            {profile.bio}
+                          </p>
+                        ) : (
+                          <Textarea
+                            value={editedProfile.bio || ''}
+                            onChange={(e) => handleFieldChange('bio', e.target.value)}
+                            placeholder="Description de l'artiste, style musical, expérience..."
+                            rows={4}
+                            className="w-full"
+                          />
+                        )}
                       </div>
                     </div>
                   </CardContent>
