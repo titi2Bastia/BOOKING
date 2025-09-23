@@ -669,6 +669,42 @@ async def get_artist_profile(artist_id: str, current_user: User = Depends(get_cu
     
     return ArtistProfile(**profile)
 
+@api_router.put("/artists/{artist_id}/profile", response_model=ArtistProfile)
+async def update_artist_profile_admin(
+    artist_id: str, 
+    profile_data: ArtistProfileUpdate, 
+    current_user: User = Depends(get_current_admin)
+):
+    """Update artist profile (admin only)"""
+    # Check if artist exists
+    artist = await db.users.find_one({"id": artist_id, "role": UserRole.ARTIST})
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artiste non trouvé")
+    
+    # Check if profile exists
+    existing_profile = await db.artist_profiles.find_one({"user_id": artist_id})
+    if not existing_profile:
+        raise HTTPException(status_code=404, detail="Profil artiste non trouvé")
+    
+    # Update profile
+    update_data = {k: v for k, v in profile_data.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.artist_profiles.update_one(
+        {"user_id": artist_id},
+        {"$set": update_data}
+    )
+    
+    # Return updated profile
+    updated_profile = await db.artist_profiles.find_one({"user_id": artist_id})
+    updated_profile.pop('_id', None)
+    
+    # Ensure required fields have default values
+    if 'nom_de_scene' not in updated_profile or not updated_profile['nom_de_scene']:
+        updated_profile['nom_de_scene'] = 'Profil incomplet'
+    
+    return ArtistProfile(**updated_profile)
+
 @api_router.patch("/artists/{artist_id}/category")
 async def update_artist_category(
     artist_id: str, 
