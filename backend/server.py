@@ -89,6 +89,10 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     ARTIST = "artist"
 
+class ArtistCategory(str, Enum):
+    DJ = "DJ"
+    GROUPE = "Groupe"
+
 class InvitationStatus(str, Enum):
     SENT = "envoyée"
     ACCEPTED = "acceptée"
