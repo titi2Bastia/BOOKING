@@ -60,6 +60,7 @@ const AdminDashboard = ({ user, onLogout }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedEventForCategory, setSelectedEventForCategory] = useState(null);
+  const [artistSearchFilter, setArtistSearchFilter] = useState('');
 
   useEffect(() => {
     loadData();
