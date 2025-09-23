@@ -662,6 +662,38 @@ async def get_artist_profile(artist_id: str, current_user: User = Depends(get_cu
     profile.pop('_id', None)
     return ArtistProfile(**profile)
 
+@api_router.patch("/artists/{artist_id}/category")
+async def update_artist_category(
+    artist_id: str, 
+    category_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update artist category (admin only)"""
+    category = category_data.get("category")
+    
+    # Validate category
+    if category not in [ArtistCategory.DJ, ArtistCategory.GROUPE]:
+        raise HTTPException(status_code=400, detail="Catégorie invalide. Utilisez 'DJ' ou 'Groupe'")
+    
+    # Check if artist exists
+    artist = await db.users.find_one({"id": artist_id, "role": UserRole.ARTIST})
+    if not artist:
+        raise HTTPException(status_code=404, detail="Artiste non trouvé")
+    
+    # Update or create profile with category
+    result = await db.artist_profiles.update_one(
+        {"user_id": artist_id},
+        {
+            "$set": {
+                "category": category,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": f"Catégorie mise à jour : {category}", "category": category}
+
 @api_router.delete("/artists/{artist_id}")
 async def delete_artist(artist_id: str, current_user: User = Depends(get_current_admin)):
     """Delete artist and all related data (admin only)"""
