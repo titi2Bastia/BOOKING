@@ -94,12 +94,16 @@ const AdminDashboard = ({ user, onLogout }) => {
       const endDate = moment().add(3, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
-      setAvailabilityDays(response.data);
+      const newAvailabilityDays = response.data;
+      setAvailabilityDays(newAvailabilityDays);
       
-      updateCalendarEvents(response.data, blockedDates);
+      // Update calendar with current blocked dates and new availability data
+      updateCalendarEvents(newAvailabilityDays, blockedDates);
+      return newAvailabilityDays;
     } catch (error) {
       console.error('Error loading availability days:', error);
       toast.error('Erreur lors du chargement des disponibilités');
+      return [];
     }
   };
 
@@ -110,12 +114,16 @@ const AdminDashboard = ({ user, onLogout }) => {
       const endDate = moment().add(3, 'years').endOf('year').format('YYYY-MM-DD');
       
       const response = await axios.get(`/blocked-dates?start_date=${startDate}&end_date=${endDate}`);
-      setBlockedDates(response.data);
+      const newBlockedDates = response.data;
+      setBlockedDates(newBlockedDates);
       
-      updateCalendarEvents(availabilityDays, response.data);
+      // Update calendar with current availability data and new blocked dates
+      updateCalendarEvents(availabilityDays, newBlockedDates);
+      return newBlockedDates;
     } catch (error) {
       console.error('Error loading blocked dates:', error);
       toast.error('Erreur lors du chargement des dates bloquées');
+      return [];
     }
   };
 
