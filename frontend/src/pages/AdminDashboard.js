@@ -735,6 +735,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                         endAccessor="end"
                         onSelectSlot={handleSelectSlot}
                         onSelectEvent={handleSelectEvent}
+                        eventStyleGetter={eventStyleGetter}
                         selectable
                         views={['month']}
                         view="month"
