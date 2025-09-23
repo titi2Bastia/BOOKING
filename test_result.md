@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the artist category update functionality: 1. Test the PATCH endpoint /api/artists/{artist_id}/category for updating categories between DJ and Groupe. 2. Test the availability-days endpoint to verify it returns artist_category field. 3. Verify data flow: create availability, update category, check synchronization. 4. Identify any issues with category update chain."
+user_problem_statement: "RÉSOLU ✅ - Le problème de couleurs du calendrier admin a été définitivement résolu. Les événements affichent maintenant correctement les couleurs basées sur les catégories d'artistes : bleu pour DJ, vert pour Groupe, gris pour non catégorisé, et rouge pour les dates bloquées. La solution utilise une combinaison d'eventStyleGetter et de manipulation DOM pour garantir l'application des couleurs."
 
 backend:
   - task: "Admin Account Creation (Production)"
