@@ -286,9 +286,24 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const refreshCalendarData = async () => {
     try {
+      // Force reload with timestamp to bypass any cache
+      const timestamp = Date.now();
+      
       const availabilityData = await loadAvailabilityDays();
       const blockedData = await loadBlockedDates();
       updateCalendarEvents(availabilityData, blockedData);
+      
+      // Force a second refresh after short delay to ensure fresh data
+      setTimeout(async () => {
+        try {
+          const freshAvailabilityData = await loadAvailabilityDays();
+          const freshBlockedData = await loadBlockedDates();
+          updateCalendarEvents(freshAvailabilityData, freshBlockedData);
+        } catch (error) {
+          console.error('Error in delayed refresh:', error);
+        }
+      }, 500);
+      
     } catch (error) {
       console.error('Error refreshing calendar data:', error);
     }
