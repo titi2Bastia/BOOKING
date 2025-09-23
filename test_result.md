@@ -307,6 +307,17 @@ frontend:
         agent: "testing"
         comment: "✅ WORKING: Image display working correctly. Logo displays in profile with proper dimensions (80x80px). Gallery images display in responsive grid (2-3 columns). Images load correctly from /api/uploads/ URLs. Backend serves images via proper API routes with correct MIME types."
 
+  - task: "Calendar Event Colors - Admin Dashboard"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ DÉFINITIVEMENT RÉSOLU - Les couleurs des événements du calendrier admin fonctionnent parfaitement. Implémentation hybride utilisant eventStyleGetter + manipulation DOM. Tests validés : DJ=bleu, Groupe=vert, Dates bloquées=rouge, Non catégorisé=gris. Tous les événements affichent les bonnes couleurs selon leur catégorie d'artiste."
 metadata:
   created_by: "main_agent"
   version: "1.0"
