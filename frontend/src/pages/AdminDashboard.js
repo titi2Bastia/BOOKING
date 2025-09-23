@@ -462,21 +462,13 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const eventStyleGetter = (event) => {
-    // DEBUG: Log event data to console
-    console.log('EVENT STYLE GETTER:', {
-      title: event.title,
-      resource: event.resource,
-      category: event.resource?.artist_category,
-      type: event.resource?.type
-    });
-
-    // Use INLINE STYLES with !important equivalent via CSS override
+    // Use INLINE STYLES for calendar event colors
     if (event.resource?.type === 'blocked') {
       return {
         style: {
-          backgroundColor: '#dc2626 !important',
-          borderColor: '#b91c1c !important',
-          color: 'white !important',
+          backgroundColor: '#dc2626',
+          borderColor: '#b91c1c',
+          color: 'white',
           fontWeight: 'bold'
         }
       };
@@ -488,9 +480,9 @@ const AdminDashboard = ({ user, onLogout }) => {
       if (category === 'DJ') {
         return {
           style: {
-            backgroundColor: '#3b82f6 !important',
-            borderColor: '#2563eb !important', 
-            color: 'white !important',
+            backgroundColor: '#3b82f6',
+            borderColor: '#2563eb', 
+            color: 'white',
             fontWeight: 'bold'
           }
         };
@@ -499,9 +491,9 @@ const AdminDashboard = ({ user, onLogout }) => {
       if (category === 'Groupe') {
         return {
           style: {
-            backgroundColor: '#10b981 !important',
-            borderColor: '#059669 !important',
-            color: 'white !important',
+            backgroundColor: '#10b981',
+            borderColor: '#059669',
+            color: 'white',
             fontWeight: 'bold'
           }
         };
@@ -510,9 +502,9 @@ const AdminDashboard = ({ user, onLogout }) => {
       // Default uncategorized style
       return {
         style: {
-          backgroundColor: '#6b7280 !important',
-          borderColor: '#4b5563 !important',
-          color: 'white !important',
+          backgroundColor: '#6b7280',
+          borderColor: '#4b5563',
+          color: 'white',
           fontWeight: 'bold'
         }
       };
