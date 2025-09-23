@@ -112,11 +112,7 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
         bio: editedProfile.bio || ''
       };
 
-      await axios.put(`/artist-profile`, updateData, {
-        headers: {
-          'artist-id': artistId
-        }
-      });
+      await axios.put(`/artists/${artistId}/profile`, updateData);
       
       // Update category if changed
       if (editedProfile.category !== profile.category) {
