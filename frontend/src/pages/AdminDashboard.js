@@ -140,6 +140,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     
     // Add availability events
     availabilities.forEach(day => {
+      console.log('Availability day:', day); // Debug: vérifier les données
       calendarEvents.push({
         id: `avail-${day.id}`,
         title: day.artist_name || 'Artiste inconnu',
@@ -149,7 +150,8 @@ const AdminDashboard = ({ user, onLogout }) => {
         resource: {
           ...day,
           type: 'availability',
-          artist_name: day.artist_name || 'Artiste inconnu'
+          artist_name: day.artist_name || 'Artiste inconnu',
+          artist_category: day.artist_category
         }
       });
     });
@@ -169,6 +171,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       });
     });
     
+    console.log('Calendar events:', calendarEvents); // Debug: vérifier les événements
     setEvents(calendarEvents);
   };
 
