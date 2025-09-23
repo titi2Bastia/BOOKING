@@ -61,6 +61,11 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
         category: newCategory
       }));
       
+      setEditedProfile(prev => ({
+        ...prev,
+        category: newCategory
+      }));
+      
       toast.success(`Catégorie mise à jour : ${newCategory}`);
       
       // Add delay to ensure MongoDB write consistency before refreshing calendar
@@ -77,6 +82,70 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
     } finally {
       setUpdatingCategory(false);
     }
+  };
+
+  const handleEditStart = () => {
+    setIsEditing(true);
+    setEditedProfile({ ...profile });
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    setEditedProfile({ ...profile });
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      // Use the existing update profile endpoint
+      const updateData = {
+        nom_de_scene: editedProfile.nom_de_scene || '',
+        telephone: editedProfile.telephone || '',
+        lien: editedProfile.lien || '',
+        tarif_soiree: editedProfile.tarif_soiree || '',
+        bio: editedProfile.bio || ''
+      };
+
+      await axios.put(`/artist-profile`, updateData, {
+        headers: {
+          'artist-id': artistId
+        }
+      });
+      
+      // Update category if changed
+      if (editedProfile.category !== profile.category) {
+        await axios.patch(`/artists/${artistId}/category`, {
+          category: editedProfile.category
+        });
+      }
+      
+      // Update local state
+      setProfile(editedProfile);
+      setIsEditing(false);
+      
+      toast.success('Profil artiste mis à jour avec succès');
+      
+      // Refresh parent data
+      setTimeout(() => {
+        if (onArtistUpdated) {
+          onArtistUpdated();
+        }
+      }, 300);
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la mise à jour du profil';
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFieldChange = (field, value) => {
+    setEditedProfile(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const getCategoryColor = (category) => {
