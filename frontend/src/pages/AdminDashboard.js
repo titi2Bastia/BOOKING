@@ -294,25 +294,16 @@ const AdminDashboard = ({ user, onLogout }) => {
       
       toast.success(`${artistName} → ${newCategory}`);
       
-      // Immediately update local calendar events (optimistic UI)
-      setEvents(prevEvents => 
-        prevEvents.map(event => {
-          if (event.resource?.artist_id === artistId && event.resource?.type === 'availability') {
-            return {
-              ...event,
-              resource: {
-                ...event.resource,
-                artist_category: newCategory
-              }
-            };
-          }
-          return event;
-        })
-      );
-      
-      // Close modal
+      // Close modal first
       setShowCategoryModal(false);
       setSelectedEventForCategory(null);
+      
+      // Force complete data reload to ensure colors update
+      setTimeout(async () => {
+        const freshAvailabilityData = await loadAvailabilityDays();
+        const freshBlockedData = await loadBlockedDates();
+        updateCalendarEvents(freshAvailabilityData, freshBlockedData);
+      }, 100);
       
     } catch (error) {
       console.error('Error updating category:', error);
