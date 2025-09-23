@@ -444,6 +444,43 @@ const AdminDashboard = ({ user, onLogout }) => {
     return {};
   };
 
+  // Filter and sort artists
+  const filteredAndSortedArtists = artists
+    .filter(artist => {
+      const searchTerm = artistSearchFilter.toLowerCase();
+      const name = (artist.nom_de_scene || artist.email || '').toLowerCase();
+      const email = (artist.email || '').toLowerCase();
+      return name.includes(searchTerm) || email.includes(searchTerm);
+    })
+    .sort((a, b) => {
+      const nameA = (a.nom_de_scene || a.email || '').toLowerCase();
+      const nameB = (b.nom_de_scene || b.email || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
+  // Get category color for artist cards
+  const getArtistCategoryColor = (category) => {
+    switch(category) {
+      case 'DJ': 
+        return 'border-blue-500 bg-blue-50';
+      case 'Groupe': 
+        return 'border-green-500 bg-green-50';
+      default: 
+        return 'border-gray-300 bg-white';
+    }
+  };
+
+  const getCategoryBadgeColor = (category) => {
+    switch(category) {
+      case 'DJ': 
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Groupe': 
+        return 'bg-green-100 text-green-800 border-green-200';
+      default: 
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   if (loading) {
