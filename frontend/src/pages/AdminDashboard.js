@@ -101,7 +101,9 @@ const AdminDashboard = ({ user, onLogout }) => {
       const startDate = moment().subtract(1, 'years').startOf('year').format('YYYY-MM-DD');
       const endDate = moment().add(3, 'years').endOf('year').format('YYYY-MM-DD');
       
-      const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}`);
+      // Add cache busting parameter to force refresh
+      const timestamp = Date.now();
+      const response = await axios.get(`/availability-days?start_date=${startDate}&end_date=${endDate}&_t=${timestamp}`);
       const newAvailabilityDays = response.data;
       setAvailabilityDays(newAvailabilityDays);
       
