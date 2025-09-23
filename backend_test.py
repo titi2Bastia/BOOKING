@@ -661,6 +661,9 @@ class ArtistCalendarAPITester:
         # Test invitation verification
         self.test_invitation_verification()
         
+        # Test artist category update functionality
+        self.test_artist_category_update_functionality()
+        
         return True
 
     def print_summary(self):
