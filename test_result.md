@@ -372,6 +372,18 @@ metadata:
         agent: "testing"
         comment: "✅ WORKING PERFECTLY: Search functionality working correctly. Email search works (test.blocked returns 1 result). Combined search + category filter working properly (results correctly filtered). Search input responsive and filters update in real-time. Minor: Artist name search case-sensitive, but email search works as expected."
 
+  - task: "Admin Artist Profile Editing"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/ArtistDetailModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "New admin artist profile editing functionality implemented. Need to test: modal access via eye icon, edit mode activation, field editing (stage name, phone, rate, link, category, bio), save/cancel functionality."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
