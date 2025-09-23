@@ -200,19 +200,45 @@ class CategoryUpdateTester:
         
         return True
 
+    def find_available_date(self):
+        """Find an available date that's not blocked"""
+        admin_headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        # Get blocked dates
+        success, blocked_dates, status = self.make_request(
+            'GET', 'blocked-dates',
+            headers=admin_headers
+        )
+        
+        blocked_date_list = []
+        if success:
+            blocked_date_list = [bd.get('date') for bd in blocked_dates if bd.get('date')]
+        
+        # Try dates starting from 7 days from now
+        for days_ahead in range(7, 30):  # Try up to 30 days ahead
+            test_date = (datetime.now() + timedelta(days=days_ahead)).date()
+            if test_date.isoformat() not in blocked_date_list:
+                return test_date
+        
+        # If no available date found, return None
+        return None
+
     def create_test_availability(self):
         """Create a test availability for the artist"""
         print("📅 Creating test availability...")
         
         artist_headers = {'Authorization': f'Bearer {self.artist_token}'}
         
-        # Create availability for a date 7 days from now to avoid blocked dates
-        future_date = (datetime.now() + timedelta(days=7)).date()
+        # Find an available date
+        available_date = self.find_available_date()
+        if not available_date:
+            self.log_result("Create Test Availability", False, "No available dates found (all blocked)")
+            return False
         
         success, availability_response, status = self.make_request(
             'POST', 'availability-days/toggle',
             data={
-                "date": future_date.isoformat(),
+                "date": available_date.isoformat(),
                 "note": "Test availability for category testing",
                 "color": "#3b82f6"
             },
@@ -220,7 +246,7 @@ class CategoryUpdateTester:
         )
         
         if success and availability_response.get('action') == 'added':
-            self.log_result("Create Test Availability", True, f"Created availability for {future_date}", availability_response)
+            self.log_result("Create Test Availability", True, f"Created availability for {available_date}", availability_response)
             return True
         else:
             self.log_result("Create Test Availability", False, f"Failed with status {status}: {availability_response}")
