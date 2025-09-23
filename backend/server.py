@@ -124,6 +124,7 @@ class ArtistProfile(BaseModel):
     telephone: Optional[str] = None
     lien: Optional[str] = None
     tarif_soiree: Optional[str] = None  # "500 € / set" or similar
+    category: Optional[ArtistCategory] = None  # DJ or Groupe
     logo_url: Optional[str] = None  # Path to uploaded logo
     gallery_urls: List[str] = Field(default_factory=list)  # List of gallery image paths
     bio: Optional[str] = Field(None, max_length=BIO_MAX_LEN)  # Short bio, max 500 chars
