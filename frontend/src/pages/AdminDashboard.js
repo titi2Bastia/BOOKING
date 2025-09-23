@@ -841,100 +841,88 @@ const AdminDashboard = ({ user, onLogout }) => {
           <TabsContent value="artists" className="space-y-6">
             <Card className="fade-in">
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
-                  Artistes inscrits ({artists.length})
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Users className="h-5 w-5 mr-2" />
+                    Artistes inscrits ({filteredAndSortedArtists.length}/{artists.length})
+                  </div>
                 </CardTitle>
+                
+                {/* Search Filter */}
+                <div className="mt-4">
+                  <div className="relative max-w-md">
+                    <input
+                      type="text"
+                      placeholder="Rechercher par nom ou email..."
+                      value={artistSearchFilter}
+                      onChange={(e) => setArtistSearchFilter(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                    <div className="absolute left-3 top-2.5">
+                      <Filter className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                {artists.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {artists.map((artist) => (
-                      <Card key={artist.id} className="card-hover">
-                        <CardContent className="pt-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-3">
-                              {artist.logo_url ? (
-                                <img
-                                  src={artist.logo_url}
-                                  alt={artist.nom_de_scene}
-                                  className="w-12 h-12 object-cover rounded-lg border"
-                                />
-                              ) : (
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 rounded-lg">
-                                  <Music className="h-6 w-6 text-white" />
-                                </div>
-                              )}
-                              <div>
-                                <h3 className="font-semibold">{artist.nom_de_scene || 'Profil incomplet'}</h3>
-                                <p className="text-sm text-gray-600">{artist.email}</p>
+                {filteredAndSortedArtists.length > 0 ? (
+                  <div className="grid gap-4">
+                    {filteredAndSortedArtists.map((artist) => (
+                      <div 
+                        key={artist.id} 
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-colors ${getArtistCategoryColor(artist.category)}`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center space-x-3">
+                            {artist.logo_url ? (
+                              <img
+                                src={artist.logo_url}
+                                alt={artist.nom_de_scene || 'Artiste'}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                <Music className="h-6 w-6 text-white" />
                               </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewArtistDetail(artist.id)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteArtist(artist.id, artist.nom_de_scene || artist.email)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h3 className="font-semibold">{artist.nom_de_scene || 'Profil incomplet'}</h3>
+                                {artist.category && (
+                                  <Badge className={`text-xs ${getCategoryBadgeColor(artist.category)}`}>
+                                    {artist.category}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600">{artist.email}</p>
                             </div>
                           </div>
                           
-                          {artist.tarif_soiree && (
-                            <div className="flex items-center mb-2">
-                              <DollarSign className="h-4 w-4 mr-2 text-green-600" />
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                {artist.tarif_soiree}
-                              </Badge>
-                            </div>
-                          )}
-                          
-                          {artist.telephone && (
-                            <div className="flex items-center text-sm text-gray-600 mb-1">
-                              <Phone className="h-4 w-4 mr-2" />
-                              {artist.telephone}
-                            </div>
-                          )}
-                          
-                          {artist.lien && (
-                            <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <LinkIcon className="h-4 w-4 mr-2" />
-                              <a 
-                                href={artist.lien} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline truncate"
-                              >
-                                Lien
-                              </a>
-                            </div>
-                          )}
-
-                          {artist.gallery_urls && artist.gallery_urls.length > 0 && (
-                            <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <ImageIcon className="h-4 w-4 mr-2" />
-                              {artist.gallery_urls.length} photo(s) en galerie
-                            </div>
-                          )}
-                          
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <p className="text-xs text-gray-500">
-                              {artist.availability_count} jours disponibles
-                            </p>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewArtistDetail(artist.id)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteArtist(artist.id, artist.nom_de_scene || artist.email)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     ))}
                   </div>
+                ) : artistSearchFilter ? (
+                  <p className="text-gray-500 text-center py-8">
+                    Aucun artiste trouvé pour "{artistSearchFilter}"
+                  </p>
                 ) : (
                   <div className="text-center py-12">
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
