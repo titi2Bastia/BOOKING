@@ -934,18 +934,78 @@ const AdminDashboard = ({ user, onLogout }) => {
                   </div>
                 </CardTitle>
                 
-                {/* Search Filter */}
-                <div className="mt-4">
-                  <div className="relative max-w-md">
-                    <input
-                      type="text"
-                      placeholder="Rechercher par nom ou email..."
-                      value={artistSearchFilter}
-                      onChange={(e) => setArtistSearchFilter(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    />
-                    <div className="absolute left-3 top-2.5">
-                      <Filter className="h-4 w-4 text-gray-400" />
+                {/* Enhanced Filters */}
+                <div className="mt-4 space-y-4">
+                  {/* Category Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-blue-600">🎧 {artistCounts.dj}</div>
+                      <div className="text-sm text-blue-800">DJs</div>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-green-600">🎵 {artistCounts.groupe}</div>
+                      <div className="text-sm text-green-800">Groupes</div>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-gray-600">🎤 {artistCounts.uncategorized}</div>
+                      <div className="text-sm text-gray-800">Non catégorisé</div>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-purple-600">👥 {artistCounts.total}</div>
+                      <div className="text-sm text-purple-800">Total</div>
+                    </div>
+                  </div>
+                  
+                  {/* Search and Category Filters */}
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Search Filter */}
+                    <div className="relative flex-1 max-w-md">
+                      <input
+                        type="text"
+                        placeholder="Rechercher par nom ou email..."
+                        value={artistSearchFilter}
+                        onChange={(e) => setArtistSearchFilter(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      />
+                      <div className="absolute left-3 top-2.5">
+                        <Filter className="h-4 w-4 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    {/* Category Filter Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant={categoryFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('all')}
+                        className={categoryFilter === 'all' ? 'bg-purple-600' : ''}
+                      >
+                        Tous ({artistCounts.total})
+                      </Button>
+                      <Button
+                        variant={categoryFilter === 'DJ' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('DJ')}
+                        className={categoryFilter === 'DJ' ? 'bg-blue-500 hover:bg-blue-600' : 'border-blue-300 text-blue-700 hover:bg-blue-50'}
+                      >
+                        🎧 DJs ({artistCounts.dj})
+                      </Button>
+                      <Button
+                        variant={categoryFilter === 'Groupe' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('Groupe')}
+                        className={categoryFilter === 'Groupe' ? 'bg-green-500 hover:bg-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}
+                      >
+                        🎵 Groupes ({artistCounts.groupe})
+                      </Button>
+                      <Button
+                        variant={categoryFilter === 'uncategorized' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryFilter('uncategorized')}
+                        className={categoryFilter === 'uncategorized' ? 'bg-gray-500 hover:bg-gray-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}
+                      >
+                        🎤 Non catégorisé ({artistCounts.uncategorized})
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -956,7 +1016,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                     {filteredAndSortedArtists.map((artist) => (
                       <div 
                         key={artist.id} 
-                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-colors ${getArtistCategoryColor(artist.category)}`}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all hover:scale-[1.02] hover:shadow-lg ${getArtistCategoryColor(artist.category)}`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center space-x-3">
@@ -964,23 +1024,37 @@ const AdminDashboard = ({ user, onLogout }) => {
                               <img
                                 src={artist.logo_url}
                                 alt={artist.nom_de_scene || 'Artiste'}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                <Music className="h-6 w-6 text-white" />
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl shadow-md ${
+                                artist.category === 'DJ' ? 'bg-blue-500' : 
+                                artist.category === 'Groupe' ? 'bg-green-500' : 'bg-gray-500'
+                              }`}>
+                                {getCategoryIcon(artist.category)}
                               </div>
                             )}
                             <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <h3 className="font-semibold">{artist.nom_de_scene || 'Profil incomplet'}</h3>
+                              <div className="flex items-center space-x-3">
+                                <h3 className="font-bold text-lg">{artist.nom_de_scene || 'Profil incomplet'}</h3>
                                 {artist.category && (
-                                  <Badge className={`text-xs ${getCategoryBadgeColor(artist.category)}`}>
-                                    {artist.category}
+                                  <Badge className={`text-sm font-bold px-3 py-1 ${getCategoryBadgeColor(artist.category)}`}>
+                                    {getCategoryIcon(artist.category)} {artist.category}
+                                  </Badge>
+                                )}
+                                {!artist.category && (
+                                  <Badge className="text-sm font-bold px-3 py-1 bg-orange-500 text-white border-orange-600 shadow-lg">
+                                    🎤 À catégoriser
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-gray-600">{artist.email}</p>
+                              <p className="text-sm text-gray-600 mt-1">{artist.email}</p>
+                              {artist.tarif_soiree && (
+                                <div className="flex items-center mt-2">
+                                  <DollarSign className="h-4 w-4 mr-1 text-green-600" />
+                                  <span className="text-sm font-semibold text-green-700">{artist.tarif_soiree}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
@@ -989,6 +1063,7 @@ const AdminDashboard = ({ user, onLogout }) => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleViewArtistDetail(artist.id)}
+                              className="hover:bg-white/80"
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -1005,10 +1080,23 @@ const AdminDashboard = ({ user, onLogout }) => {
                       </div>
                     ))}
                   </div>
-                ) : artistSearchFilter ? (
-                  <p className="text-gray-500 text-center py-8">
-                    Aucun artiste trouvé pour "{artistSearchFilter}"
-                  </p>
+                ) : artistSearchFilter || categoryFilter !== 'all' ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun artiste trouvé</h3>
+                    <p className="text-gray-600 mb-6">
+                      {artistSearchFilter ? `Aucun résultat pour "${artistSearchFilter}"` : `Aucun artiste dans la catégorie sélectionnée`}
+                    </p>
+                    <Button 
+                      onClick={() => {
+                        setArtistSearchFilter('');
+                        setCategoryFilter('all');
+                      }}
+                      variant="outline"
+                    >
+                      Réinitialiser les filtres
+                    </Button>
+                  </div>
                 ) : (
                   <div className="text-center py-12">
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
