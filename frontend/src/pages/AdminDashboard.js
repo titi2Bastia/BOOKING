@@ -397,46 +397,58 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const eventStyleGetter = (event) => {
+    console.log('=== STYLE GETTER ===');
+    console.log('Event:', event);
+    console.log('Resource type:', event.resource?.type);
+    console.log('Artist category:', event.resource?.artist_category);
+    
     if (event.resource?.type === 'blocked') {
       return {
         style: {
-          backgroundColor: '#dc2626',
+          backgroundColor: '#dc2626', // ROUGE pour dates bloquées
           borderColor: '#b91c1c',
-          color: 'white'
+          color: 'white',
+          fontWeight: 'bold'
         }
       };
     }
     
-    // SIMPLE: Color by artist category
+    // COULEURS PAR CATÉGORIE - FORCE L'ÉCRASEMENT
     if (event.resource?.type === 'availability') {
       const category = event.resource?.artist_category;
+      console.log('Processing availability with category:', category);
       
       if (category === 'DJ') {
+        console.log('Applying BLUE for DJ');
         return {
           style: {
-            backgroundColor: '#3b82f6', // BLEU pour DJ
-            borderColor: '#2563eb',
-            color: 'white'
+            backgroundColor: '#3b82f6 !important', // BLEU pour DJ
+            borderColor: '#2563eb !important',
+            color: 'white !important',
+            fontWeight: 'bold'
           }
         };
       }
       
       if (category === 'Groupe') {
+        console.log('Applying GREEN for Groupe');
         return {
           style: {
-            backgroundColor: '#10b981', // VERT pour Groupe  
-            borderColor: '#059669',
-            color: 'white'
+            backgroundColor: '#10b981 !important', // VERT pour Groupe  
+            borderColor: '#059669 !important',
+            color: 'white !important',
+            fontWeight: 'bold'
           }
         };
       }
       
-      // Pas de catégorie = gris
+      console.log('Applying GRAY for no category');
       return {
         style: {
-          backgroundColor: '#6b7280',
-          borderColor: '#4b5563', 
-          color: 'white'
+          backgroundColor: '#6b7280 !important', // GRIS pour pas de catégorie
+          borderColor: '#4b5563 !important', 
+          color: 'white !important',
+          fontWeight: 'bold'
         }
       };
     }
