@@ -3,6 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { 
   User, 
@@ -14,7 +17,10 @@ import {
   Mail,
   Image as ImageIcon,
   X,
-  Tag
+  Tag,
+  Edit,
+  Save,
+  XCircle
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
