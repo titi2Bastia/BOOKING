@@ -142,14 +142,18 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const updateCalendarEvents = (availabilities, blocked) => {
-    console.log('=== DEBUG COLORS ===');
-    console.log('Availabilities received:', availabilities);
-    
     const calendarEvents = [];
     
-    // Add availability events
+    // Add availability events with FORCED COLORS
     availabilities.forEach(day => {
-      console.log(`Artist: ${day.artist_name}, Category: ${day.artist_category}`);
+      // FORCE COLOR BASED ON CATEGORY
+      let eventColor = '#6b7280'; // Default gray
+      
+      if (day.artist_category === 'DJ') {
+        eventColor = '#3b82f6'; // BLEU pour DJ
+      } else if (day.artist_category === 'Groupe') {
+        eventColor = '#10b981'; // VERT pour Groupe
+      }
       
       calendarEvents.push({
         id: `avail-${day.id}`,
@@ -157,11 +161,15 @@ const AdminDashboard = ({ user, onLogout }) => {
         start: new Date(`${day.date}T00:00:00`),
         end: new Date(`${day.date}T23:59:59`),
         allDay: true,
+        color: eventColor,
+        backgroundColor: eventColor,
+        borderColor: eventColor,
         resource: {
           ...day,
           type: 'availability',
           artist_name: day.artist_name || 'Artiste inconnu',
-          artist_category: day.artist_category
+          artist_category: day.artist_category,
+          color: eventColor
         }
       });
     });
@@ -174,6 +182,9 @@ const AdminDashboard = ({ user, onLogout }) => {
         start: new Date(`${blockedDate.date}T00:00:00`),
         end: new Date(`${blockedDate.date}T23:59:59`),
         allDay: true,
+        color: '#dc2626',
+        backgroundColor: '#dc2626',
+        borderColor: '#dc2626',
         resource: {
           ...blockedDate,
           type: 'blocked'
@@ -181,36 +192,7 @@ const AdminDashboard = ({ user, onLogout }) => {
       });
     });
     
-    console.log('Final calendar events:', calendarEvents);
     setEvents(calendarEvents);
-    
-    // FORCE COLORS AFTER RENDER
-    setTimeout(() => {
-      const allEvents = document.querySelectorAll('.rbc-event');
-      allEvents.forEach(event => {
-        const text = event.textContent || '';
-        
-        if (text.includes('Cdl')) {
-          // Cdl = Groupe = VERT
-          event.style.backgroundColor = '#10b981';
-          event.style.borderColor = '#059669';
-          event.style.color = 'white';
-          console.log('APPLIED GREEN to Cdl');
-        } else if (text.includes('Titi salducci')) {
-          // Titi salducci = DJ = BLEU  
-          event.style.backgroundColor = '#3b82f6';
-          event.style.borderColor = '#2563eb';
-          event.style.color = 'white';
-          console.log('APPLIED BLUE to Titi salducci');
-        } else if (text.includes('Test')) {
-          // Test Category Artist = Groupe = VERT
-          event.style.backgroundColor = '#10b981';
-          event.style.borderColor = '#059669';
-          event.style.color = 'white';
-          console.log('APPLIED GREEN to Test Category Artist');
-        }
-      });
-    }, 100);
   };
 
   const loadInvitations = async () => {
