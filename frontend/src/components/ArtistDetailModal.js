@@ -23,6 +23,7 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [updatingCategory, setUpdatingCategory] = useState(false);
 
   useEffect(() => {
     if (isOpen && artistId) {
@@ -40,6 +41,37 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
       toast.error('Erreur lors du chargement du profil artiste');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateCategory = async (newCategory) => {
+    setUpdatingCategory(true);
+    try {
+      await axios.patch(`/artists/${artistId}/category`, {
+        category: newCategory
+      });
+      
+      // Update local state
+      setProfile(prev => ({
+        ...prev,
+        category: newCategory
+      }));
+      
+      toast.success(`Catégorie mise à jour : ${newCategory}`);
+    } catch (error) {
+      console.error('Error updating category:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la mise à jour';
+      toast.error(message);
+    } finally {
+      setUpdatingCategory(false);
+    }
+  };
+
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'DJ': return 'bg-blue-100 text-blue-800';
+      case 'Groupe': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
