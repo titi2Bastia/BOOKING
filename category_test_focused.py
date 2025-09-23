@@ -206,13 +206,13 @@ class CategoryUpdateTester:
         
         artist_headers = {'Authorization': f'Bearer {self.artist_token}'}
         
-        # Create availability for tomorrow
-        tomorrow = (datetime.now() + timedelta(days=1)).date()
+        # Create availability for a date 7 days from now to avoid blocked dates
+        future_date = (datetime.now() + timedelta(days=7)).date()
         
         success, availability_response, status = self.make_request(
             'POST', 'availability-days/toggle',
             data={
-                "date": tomorrow.isoformat(),
+                "date": future_date.isoformat(),
                 "note": "Test availability for category testing",
                 "color": "#3b82f6"
             },
@@ -220,7 +220,7 @@ class CategoryUpdateTester:
         )
         
         if success and availability_response.get('action') == 'added':
-            self.log_result("Create Test Availability", True, f"Created availability for {tomorrow}", availability_response)
+            self.log_result("Create Test Availability", True, f"Created availability for {future_date}", availability_response)
             return True
         else:
             self.log_result("Create Test Availability", False, f"Failed with status {status}: {availability_response}")
