@@ -502,8 +502,6 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   // Filter and sort artists with category filtering
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  
   const filteredAndSortedArtists = artists
     .filter(artist => {
       // Search term filter
