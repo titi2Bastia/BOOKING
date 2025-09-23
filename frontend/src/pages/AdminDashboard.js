@@ -183,6 +183,34 @@ const AdminDashboard = ({ user, onLogout }) => {
     
     console.log('Final calendar events:', calendarEvents);
     setEvents(calendarEvents);
+    
+    // FORCE COLORS AFTER RENDER
+    setTimeout(() => {
+      const allEvents = document.querySelectorAll('.rbc-event');
+      allEvents.forEach(event => {
+        const text = event.textContent || '';
+        
+        if (text.includes('Cdl')) {
+          // Cdl = Groupe = VERT
+          event.style.backgroundColor = '#10b981';
+          event.style.borderColor = '#059669';
+          event.style.color = 'white';
+          console.log('APPLIED GREEN to Cdl');
+        } else if (text.includes('Titi salducci')) {
+          // Titi salducci = DJ = BLEU  
+          event.style.backgroundColor = '#3b82f6';
+          event.style.borderColor = '#2563eb';
+          event.style.color = 'white';
+          console.log('APPLIED BLUE to Titi salducci');
+        } else if (text.includes('Test')) {
+          // Test Category Artist = Groupe = VERT
+          event.style.backgroundColor = '#10b981';
+          event.style.borderColor = '#059669';
+          event.style.color = 'white';
+          console.log('APPLIED GREEN to Test Category Artist');
+        }
+      });
+    }, 100);
   };
 
   const loadInvitations = async () => {
