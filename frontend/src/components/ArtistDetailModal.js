@@ -243,81 +243,159 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
 
                     {/* Basic Info */}
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                        {profile.nom_de_scene}
-                      </h2>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center text-gray-600">
-                            <Mail className="h-4 w-4 mr-2" />
-                            <span className="text-sm">{profile.user_id}</span>
-                          </div>
+                      {!isEditing ? (
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            {profile.nom_de_scene}
+                          </h2>
                           
-                          {profile.telephone && (
-                            <div className="flex items-center text-gray-600">
-                              <Phone className="h-4 w-4 mr-2" />
-                              <span className="text-sm">{profile.telephone}</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center text-gray-600">
+                                <Mail className="h-4 w-4 mr-2" />
+                                <span className="text-sm">{profile.user_id}</span>
+                              </div>
+                              
+                              {profile.telephone && (
+                                <div className="flex items-center text-gray-600">
+                                  <Phone className="h-4 w-4 mr-2" />
+                                  <span className="text-sm">{profile.telephone}</span>
+                                </div>
+                              )}
+                              
+                              {profile.lien && (
+                                <div className="flex items-center text-gray-600">
+                                  <LinkIcon className="h-4 w-4 mr-2" />
+                                  <a 
+                                    href={profile.lien} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 hover:underline"
+                                  >
+                                    Voir le lien
+                                  </a>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          
-                          {profile.lien && (
-                            <div className="flex items-center text-gray-600">
-                              <LinkIcon className="h-4 w-4 mr-2" />
-                              <a 
-                                href={profile.lien} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:underline"
-                              >
-                                Voir le lien
-                              </a>
-                            </div>
-                          )}
-                        </div>
 
-                        <div className="space-y-2">
-                          {profile.tarif_soiree && (
-                            <div className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-2 text-green-600" />
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                {profile.tarif_soiree}
-                              </Badge>
+                            <div className="space-y-2">
+                              {profile.tarif_soiree && (
+                                <div className="flex items-center">
+                                  <DollarSign className="h-4 w-4 mr-2 text-green-600" />
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    {profile.tarif_soiree}
+                                  </Badge>
+                                </div>
+                              )}
+                              
+                              {/* Category Section */}
+                              <div className="flex items-center space-x-2">
+                                <Tag className="h-4 w-4 mr-2 text-purple-600" />
+                                <span className="text-sm text-gray-600 mr-2">Catégorie :</span>
+                                <Select 
+                                  value={profile.category || ''} 
+                                  onValueChange={updateCategory}
+                                  disabled={updatingCategory}
+                                >
+                                  <SelectTrigger className="w-32 h-8">
+                                    <SelectValue placeholder="Choisir" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="DJ">DJ</SelectItem>
+                                    <SelectItem value="Groupe">Groupe</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {profile.category && (
+                                  <Badge className={getCategoryColor(profile.category)}>
+                                    {profile.category}
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center text-gray-600">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span className="text-sm">
+                                  Profil créé le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
+                                </span>
+                              </div>
                             </div>
-                          )}
-                          
-                          {/* Category Section */}
-                          <div className="flex items-center space-x-2">
-                            <Tag className="h-4 w-4 mr-2 text-purple-600" />
-                            <span className="text-sm text-gray-600 mr-2">Catégorie :</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="nom_de_scene" className="text-sm font-medium text-gray-700">
+                              Nom de scène
+                            </Label>
+                            <Input
+                              id="nom_de_scene"
+                              value={editedProfile.nom_de_scene || ''}
+                              onChange={(e) => handleFieldChange('nom_de_scene', e.target.value)}
+                              className="mt-1"
+                              placeholder="Nom de scène de l'artiste"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="telephone" className="text-sm font-medium text-gray-700">
+                                Téléphone
+                              </Label>
+                              <Input
+                                id="telephone"
+                                value={editedProfile.telephone || ''}
+                                onChange={(e) => handleFieldChange('telephone', e.target.value)}
+                                className="mt-1"
+                                placeholder="Numéro de téléphone"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="tarif_soiree" className="text-sm font-medium text-gray-700">
+                                Tarif soirée
+                              </Label>
+                              <Input
+                                id="tarif_soiree"
+                                value={editedProfile.tarif_soiree || ''}
+                                onChange={(e) => handleFieldChange('tarif_soiree', e.target.value)}
+                                className="mt-1"
+                                placeholder="ex: 500€"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="lien" className="text-sm font-medium text-gray-700">
+                              Lien (site web, réseaux sociaux, etc.)
+                            </Label>
+                            <Input
+                              id="lien"
+                              value={editedProfile.lien || ''}
+                              onChange={(e) => handleFieldChange('lien', e.target.value)}
+                              className="mt-1"
+                              placeholder="https://..."
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="category" className="text-sm font-medium text-gray-700">
+                              Catégorie
+                            </Label>
                             <Select 
-                              value={profile.category || ''} 
-                              onValueChange={updateCategory}
-                              disabled={updatingCategory}
+                              value={editedProfile.category || ''} 
+                              onValueChange={(value) => handleFieldChange('category', value)}
                             >
-                              <SelectTrigger className="w-32 h-8">
-                                <SelectValue placeholder="Choisir" />
+                              <SelectTrigger className="mt-1">
+                                <SelectValue placeholder="Choisir une catégorie" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="DJ">DJ</SelectItem>
                                 <SelectItem value="Groupe">Groupe</SelectItem>
                               </SelectContent>
                             </Select>
-                            {profile.category && (
-                              <Badge className={getCategoryColor(profile.category)}>
-                                {profile.category}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span className="text-sm">
-                              Profil créé le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
-                            </span>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
