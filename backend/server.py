@@ -662,6 +662,11 @@ async def get_artist_profile(artist_id: str, current_user: User = Depends(get_cu
         raise HTTPException(status_code=404, detail="Profil artiste non trouvé")
     
     profile.pop('_id', None)
+    
+    # Ensure required fields have default values
+    if 'nom_de_scene' not in profile or not profile['nom_de_scene']:
+        profile['nom_de_scene'] = 'Profil incomplet'
+    
     return ArtistProfile(**profile)
 
 @api_router.patch("/artists/{artist_id}/category")
