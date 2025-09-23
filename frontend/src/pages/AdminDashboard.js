@@ -286,7 +286,40 @@ const AdminDashboard = ({ user, onLogout }) => {
     updateCalendarEvents(availabilityDays, newBlockedDates);
   };
 
-  const refreshCalendarData = async () => {
+  const quickChangeCategory = async (artistId, newCategory, artistName) => {
+    try {
+      await axios.patch(`/artists/${artistId}/category`, {
+        category: newCategory
+      });
+      
+      toast.success(`${artistName} → ${newCategory}`);
+      
+      // Immediately update local calendar events (optimistic UI)
+      setEvents(prevEvents => 
+        prevEvents.map(event => {
+          if (event.resource?.artist_id === artistId && event.resource?.type === 'availability') {
+            return {
+              ...event,
+              resource: {
+                ...event.resource,
+                artist_category: newCategory
+              }
+            };
+          }
+          return event;
+        })
+      );
+      
+      // Close modal
+      setShowCategoryModal(false);
+      setSelectedEventForCategory(null);
+      
+    } catch (error) {
+      console.error('Error updating category:', error);
+      const message = error.response?.data?.detail || 'Erreur lors de la mise à jour';
+      toast.error(message);
+    }
+  };
     try {
       // Force reload with timestamp to bypass any cache
       const timestamp = Date.now();
