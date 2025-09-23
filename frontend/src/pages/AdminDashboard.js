@@ -320,10 +320,11 @@ const AdminDashboard = ({ user, onLogout }) => {
   };
 
   const handleSelectEvent = (event) => {
-    // Only handle clicks on availability events (not blocked dates)
+    // Handle clicks on availability events for quick category change
     if (event.resource?.type === 'availability' && event.resource?.artist_id) {
-      setSelectedArtistId(event.resource.artist_id);
-      setShowArtistDetail(true);
+      // Open quick category change modal instead of artist detail
+      setSelectedEventForCategory(event.resource);
+      setShowCategoryModal(true);
     }
   };
 
