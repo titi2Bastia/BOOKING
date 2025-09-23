@@ -1183,7 +1183,11 @@ const AdminDashboard = ({ user, onLogout }) => {
           setShowArtistDetail(false);
           setSelectedArtistId(null);
         }}
-        onArtistUpdated={refreshCalendarData}
+        onArtistUpdated={() => {
+          // Reload both artists list and calendar data when artist is updated
+          loadArtists();
+          refreshCalendarData();
+        }}
       />
 
       {/* Quick Category Change Modal */}
