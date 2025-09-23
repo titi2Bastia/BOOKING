@@ -39,6 +39,7 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
     try {
       const response = await axios.get(`/artists/${artistId}/profile`);
       setProfile(response.data);
+      setEditedProfile(response.data); // Initialize edited profile
     } catch (error) {
       console.error('Error loading artist profile:', error);
       toast.error('Erreur lors du chargement du profil artiste');
