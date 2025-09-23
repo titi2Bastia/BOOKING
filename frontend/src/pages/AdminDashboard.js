@@ -320,6 +320,8 @@ const AdminDashboard = ({ user, onLogout }) => {
       toast.error(message);
     }
   };
+
+  const refreshCalendarData = async () => {
     try {
       // Force reload with timestamp to bypass any cache
       const timestamp = Date.now();
