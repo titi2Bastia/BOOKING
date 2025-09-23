@@ -402,7 +402,7 @@ const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
               </Card>
 
               {/* Bio */}
-              {(!isEditing && profile.bio) || isEditing ? (
+              {(profile.bio || isEditing) && (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-start space-x-3">
