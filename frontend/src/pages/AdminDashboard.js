@@ -186,15 +186,11 @@ const AdminDashboard = ({ user, onLogout }) => {
 
   const applyEventColors = (availabilities, blocked) => {
     try {
-      // Force apply colors to calendar events via DOM manipulation
+      // Force apply colors to calendar events via DOM manipulation as backup
       const eventElements = document.querySelectorAll('.rbc-event');
-      
-      console.log('DEBUG: Applying colors to events');
-      console.log('DEBUG: Availabilities:', availabilities.map(a => ({ name: a.artist_name, category: a.artist_category })));
       
       eventElements.forEach(element => {
         const eventText = (element.textContent || '').trim();
-        console.log(`DEBUG: Processing event with text: "${eventText}"`);
         
         // Apply colors based on text content
         if (eventText.includes('🚫')) {
@@ -202,9 +198,8 @@ const AdminDashboard = ({ user, onLogout }) => {
           element.style.setProperty('background', 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)', 'important');
           element.style.setProperty('border-color', '#b91c1c', 'important');
           element.style.setProperty('color', 'white', 'important');
-          console.log(`Applied RED to blocked event: ${eventText}`);
         } else {
-          // Find matching availability by artist name (improved matching)
+          // Find matching availability by artist name
           const matchingAvailability = availabilities.find(avail => {
             const artistName = (avail.artist_name || '').trim().toLowerCase();
             const eventName = eventText.toLowerCase();
@@ -212,29 +207,23 @@ const AdminDashboard = ({ user, onLogout }) => {
           });
           
           if (matchingAvailability) {
-            console.log(`Found matching availability for "${eventText}":`, matchingAvailability);
-            
             if (matchingAvailability.artist_category === 'DJ') {
               // DJ - BLUE
               element.style.setProperty('background', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 'important');
               element.style.setProperty('border-color', '#2563eb', 'important');
               element.style.setProperty('color', 'white', 'important');
-              console.log(`Applied BLUE (DJ) to event: ${eventText}`);
             } else if (matchingAvailability.artist_category === 'Groupe') {
               // Groupe - GREEN
               element.style.setProperty('background', 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 'important');
               element.style.setProperty('border-color', '#059669', 'important');
               element.style.setProperty('color', 'white', 'important');
-              console.log(`Applied GREEN (Groupe) to event: ${eventText}`);
             } else {
               // Uncategorized - GRAY
               element.style.setProperty('background', 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)', 'important');
               element.style.setProperty('border-color', '#4b5563', 'important');
               element.style.setProperty('color', 'white', 'important');
-              console.log(`Applied GRAY (Uncategorized) to event: ${eventText}`);
             }
           } else {
-            console.log(`No matching availability found for event: "${eventText}"`);
             // Default gray for unmatched events
             element.style.setProperty('background', 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)', 'important');
             element.style.setProperty('border-color', '#4b5563', 'important');
@@ -242,8 +231,6 @@ const AdminDashboard = ({ user, onLogout }) => {
           }
         }
       });
-      
-      console.log('Applied colors to', eventElements.length, 'calendar events');
     } catch (error) {
       console.error('Error applying event colors:', error);
     }
