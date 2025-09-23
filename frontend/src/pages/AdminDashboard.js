@@ -33,46 +33,9 @@ import moment from 'moment';
 import 'moment/locale/fr';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '../calendar-colors.css';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-// Add custom CSS for event styling
-const customStyles = `
-  .dj-event-style {
-    background-color: #3b82f6 !important;
-    border-color: #2563eb !important;
-    color: white !important;
-    font-weight: bold !important;
-  }
-  
-  .groupe-event-style {
-    background-color: #10b981 !important;
-    border-color: #059669 !important;
-    color: white !important;
-    font-weight: bold !important;
-  }
-  
-  .blocked-event-style {
-    background-color: #dc2626 !important;
-    border-color: #b91c1c !important;
-    color: white !important;
-    font-weight: bold !important;
-  }
-  
-  .default-event-style {
-    background-color: #6b7280 !important;
-    border-color: #4b5563 !important;
-    color: white !important;
-    font-weight: bold !important;
-  }
-`;
-
-// Inject styles
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement("style");
-  styleSheet.innerText = customStyles;
-  document.head.appendChild(styleSheet);
-}
 import ArtistDetailModal from '../components/ArtistDetailModal';
 import BlockedDatesManager from '../components/BlockedDatesManager';
 
