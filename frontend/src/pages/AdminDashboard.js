@@ -937,6 +937,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           setShowArtistDetail(false);
           setSelectedArtistId(null);
         }}
+        onArtistUpdated={refreshCalendarData}
       />
     </div>
   );
