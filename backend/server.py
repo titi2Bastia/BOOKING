@@ -232,6 +232,7 @@ class ArtistWithProfile(BaseModel):
     logo_url: Optional[str] = None
     gallery_urls: List[str] = Field(default_factory=list)
     bio: Optional[str] = None
+    category: Optional[ArtistCategory] = None
     availability_count: int = 0
 
 # File upload utilities
