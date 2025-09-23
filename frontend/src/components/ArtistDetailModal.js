@@ -19,7 +19,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const ArtistDetailModal = ({ artistId, isOpen, onClose }) => {
+const ArtistDetailModal = ({ artistId, isOpen, onClose, onArtistUpdated }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
